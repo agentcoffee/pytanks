@@ -1,6 +1,8 @@
 import socket
 import pickle
 import argparse
+import termios
+import sys
 
 from packets import * 
 
@@ -35,7 +37,7 @@ class Controller():
     def autoRepeatDetection(self, events):
 
         try:
-            e = events.get(0)
+            e = events.get(0.01)
         except Empty:
             e = None
 
@@ -48,7 +50,7 @@ class Controller():
             if k is not None:
                 if k.event is Input.Event.PRESS:
                     if self.map[k.key] == Input.Event.RELEASE:
-                        #self.on_press(e.key)
+                        print(k.key.name)
                         self.map[k.key] = Input.Event.PRESS
                         self.socket.sendto(pickle.dumps(
                             InputPacket(k, self.tank_id)), (self.ip, self.port))
@@ -62,7 +64,7 @@ class Controller():
                     return False
 
             try:
-                e = events.get(0)
+                e = events.get(0.01)
             except Empty:
                 e = None
 
@@ -85,4 +87,15 @@ if __name__ == "__main__":
 
     print("IP: " + str(args.ip) + " : " + str(args.port))
 
-    Controller(args.ip, args.port).loop()
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    new = termios.tcgetattr(fd)
+
+    new[3] = new[3] & ~termios.ECHO
+
+    try:
+        termios.tcsetattr(fd, termios.TCSADRAIN, new)
+
+        Controller(args.ip, args.port).loop()
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)

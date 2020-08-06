@@ -16,7 +16,7 @@ class ControllerServer:
         self.port   = port
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self.socket.bind( (ip, port) )
-        print("Socket bound to " + ip + ":" + str(ip))
+        print("Socket bound to " + ip + ":" + str(port))
 
         self.window_pipe = window_pipe
         self.tank_pipes = []

@@ -148,6 +148,12 @@ class Window:
 
             __idle_start = (time.monotonic_ns() / 1000000)
 
+            # Coarse grained waiting
+            while ( deadline - (time.monotonic_ns() / 1000000) ) > (EVENT_LOOP_TIME / 5) :
+                time.sleep( EVENT_LOOP_TIME / (5 * 1000) )
+            # end while
+
+            # Fine grained waiting
             while time.monotonic_ns() / 1000000 < deadline:
                 continue
             # end while
