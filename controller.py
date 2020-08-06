@@ -1,82 +1,42 @@
 import socket
 import pickle
 
-from packets import * 
+from multiprocessing import Pipe
 
-from pynput import keyboard
+from packets import * 
 from commands import Input
 
 # Exceptions
 from queue import Empty
 
-class Controller():
+class ControllerServer:
 
-    def __init__(self, ip, port):
-        #self.pipe  = p
-
+    def __init__(self, ip, port, window_pipe):
         self.ip     = ip
         self.port   = port
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        self.socket.bind( (ip, port) )
+        print("Socket bound to " + ip + ":" + str(ip))
 
-        self.socket.sendto(pickle.dumps(JoinReqPacket()), (ip, port))
-        print("Listening")
-        data, address = self.socket.recvfrom(2048)
-        print("Caught packet")
-
-        packet = pickle.loads(data)
-
-        print(packet)
-
-        if type(packet) is not JoinAckPacket:
-            raise SystemError
-        self.tank_id = packet.tank_id
-
-        self.map   = dict( (x, Input.Event.RELEASE) for x in Input.Key ) 
-
-    def autoRepeatDetection(self, events):
-
-        try:
-            e = events.get(0)
-        except Empty:
-            e = None
-
-        while e is not None:
-            try:
-                k = Input(e)
-            except KeyError:
-                k = None
-
-            if k is not None:
-                if k.event is Input.Event.PRESS:
-                    if self.map[k.key] == Input.Event.RELEASE:
-                        #self.on_press(e.key)
-                        self.map[k.key] = Input.Event.PRESS
-                        #self.pipe.send(k)
-                        self.socket.sendto(pickle.dumps(
-                            InputPacket(k, self.tank_id)), (self.ip, self.port))
-                else:
-                    #self.on_release(e.key)
-                    self.map[k.key] = Input.Event.RELEASE
-                    #self.pipe.send(k)
-                    self.socket.sendto(pickle.dumps(
-                        InputPacket(k, self.tank_id)), (self.ip, self.port))
-
-                if k.key == Input.Key.ESC:
-                    return False
-
-            try:
-                e = events.get(0)
-            except Empty:
-                e = None
-
-        return True
+        self.window_pipe = window_pipe
+        self.tank_pipes = []
 
     def loop(self):
-        with keyboard.Events() as events:
-            while True:
-                if not self.autoRepeatDetection(events):
-                    return
+        while True:
+            print("Listening")
+            data, addr = self.socket.recvfrom(2048)
+            packet = pickle.loads(data)
+            print("Caught packet " + str(type(packet)))
 
+            if type(packet) is InputPacket:
+                self.tank_pipes[packet.tank_id].send(packet.key_input)
+            elif type(packet) is JoinReqPacket:
+                a, b = Pipe()
+                self.tank_pipes.append(a)
+                self.window_pipe.send(b)
+                print("Registering new tank: " + str(len(self.tank_pipes)-1))
+                # very hacky:
+                self.socket.sendto(
+                        pickle.dumps(JoinAckPacket(len(self.tank_pipes)-1)), addr)
+        # end while
 
-if __name__ == "__main__":
-    Controller("127.0.0.1", 5001).loop()
