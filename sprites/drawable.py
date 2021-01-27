@@ -1,5 +1,5 @@
-from vector import Vector
-from interval import Interval
+from maths.vector import Vector
+from maths.interval import Interval
 
 
 class Drawable:
@@ -24,7 +24,7 @@ class Drawable:
         self.gc.change(foreground = self.white)
         self.window.poly_line(self.gc, X.CoordModeOrigin,
                 [(int(dot.x), int(dot.y)) for dot in self.image])
-        
+
     def collisionBox(self):
         return (Interval(self.position.x - self.hitbox_radius,
                          self.position.x + self.hitbox_radius),
@@ -37,6 +37,8 @@ class Drawable:
 
         if box[0].overlaps(otherBox[0]) and box[1].overlaps(otherBox[1]):
             return True
+        else:
+            return False
 
     def collision(self, other, sprites):
         print("Movable:" + str(self) + " collides with " + str(other))

@@ -1,11 +1,11 @@
 import math
 from Xlib import X, threaded
 
-from vector import Vector
-from matrix import RotationMatrix
-from movable import Movable
-from projectile import Projectile
-from explosion import Explosion
+from maths.vector import Vector
+from maths.matrix import RotationMatrix
+from sprites.movable import Movable
+from sprites.projectile import Projectile
+from sprites.explosion import Explosion
 from commands import Input
 
 
@@ -29,6 +29,7 @@ class Tank(Movable):
                       Vector(10, -1), Vector(5, -1),  Vector(5, -5)]
         self.hitbox_radius  = 8 # ~= sqrt(5*5 + 5*5)
         self.health         = 100
+        #self.tank_name      = tank_name
 
         self.input_pipe       = input_pipe
 
@@ -38,35 +39,24 @@ class Tank(Movable):
         return "Tank: " + super().__str__()
 
     def handler(self, e):
-#        if e.type == X.KeyPress:
         if e.event == Input.Event.PRESS:
-            #if e.detail == 111:
             if e.key == Input.Key.UP:
                 self.go(True)
-            #elif e.detail == 116:
             elif e.key == Input.Key.DOWN:
                 self.stop(True)
-            #elif e.detail == 113:
             elif e.key == Input.Key.LEFT:
                 self.rotate(True, -1)
-            #elif e.detail == 114:
             elif e.key == Input.Key.RIGHT:
                 self.rotate(True, 1)
-            #elif e.detail == 65:
             elif e.key == Input.Key.SPACE:
                 self.shoot = True
-#        elif e.type == X.KeyRelease:
         elif e.event == Input.Event.RELEASE:
-#            if e.detail == 111:
             if e.key == Input.Key.UP:
                 self.go(False)
-#            elif e.detail == 116:
             elif e.key == Input.Key.DOWN:
                 self.stop(False)
-#            elif e.detail == 113:
             elif e.key == Input.Key.LEFT:
                 self.rotate(False, -1)
-#            elif e.detail == 114:
             elif e.key == Input.Key.RIGHT:
                 self.rotate(False, 1)
 

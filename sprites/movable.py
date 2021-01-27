@@ -1,10 +1,10 @@
 import time
 
-from vector import Vector
-from matrix import Matrix
-from matrix import RotationMatrix
-from interval import Interval
-from drawable import Drawable
+from maths.vector import Vector
+from maths.matrix import Matrix
+from maths.matrix import RotationMatrix
+from maths.interval import Interval
+from sprites.drawable import Drawable
 
 
 class Movable(Drawable):

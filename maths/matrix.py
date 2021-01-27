@@ -1,6 +1,6 @@
 import math
 
-from vector import Vector
+from maths.vector import Vector
 
 
 class Matrix:

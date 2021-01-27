@@ -3,8 +3,8 @@ import argparse
 
 from multiprocessing import Process, Pipe
 
-from window import Window
-from controller import ControllerServer
+from xorg.window import Window
+from tank_server import TankServer
 
 # TODO make class forkable
 def f(d, p):
@@ -12,9 +12,9 @@ def f(d, p):
 
 # TODO make class forkable
 def g(ip, port, pipe):
-    ControllerServer(ip, port, pipe).loop()
+    TankServer(ip, port, pipe).loop()
 
-def tanks_server():
+def start_server():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--ip", required=True, type=str)
@@ -40,4 +40,4 @@ def tanks_server():
     controller_p.join()
 
 if __name__ == "__main__":
-    tanks_server()
+    start_server()

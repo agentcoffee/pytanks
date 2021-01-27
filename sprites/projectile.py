@@ -1,11 +1,11 @@
 import math
 from Xlib import X, threaded
 
-import tank
-from vector import Vector
-from matrix import RotationMatrix
-from movable import Movable
-from explosion import Explosion
+import sprites.tank
+from maths.vector import Vector
+from maths.matrix import RotationMatrix
+from sprites.movable import Movable
+from sprites.explosion import Explosion
 
 
 class Projectile(Movable):
@@ -13,11 +13,11 @@ class Projectile(Movable):
         super().__init__(field = field,
                 x = x, y = y,
                 angle = angle,
-                acceleration = 0.001,
+                acceleration = 0,
                 deacceleration = 0.0005,
                 angular_speed = 0.005,
-                drag_coefficient = 0.001,
-                speed = speed,
+                drag_coefficient = 0.0001,
+                speed = speed+0.7,
                 screen = screen,
                 window = window,
                 gc = gc)

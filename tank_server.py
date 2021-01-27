@@ -9,7 +9,7 @@ from commands import Input
 # Exceptions
 from queue import Empty
 
-class ControllerServer:
+class TankServer:
 
     def __init__(self, ip, port, window_pipe):
         self.ip     = ip
@@ -38,5 +38,6 @@ class ControllerServer:
                 # very hacky:
                 self.socket.sendto(
                         pickle.dumps(JoinAckPacket(len(self.tank_pipes)-1)), addr)
+            # end if
         # end while
 

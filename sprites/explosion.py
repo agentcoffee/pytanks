@@ -1,8 +1,8 @@
 import time
 from Xlib import X, threaded
 
-from vector import Vector
-from drawable import Drawable
+from maths.vector import Vector
+from sprites.drawable import Drawable
 
 EXPANSION_TIME = 100 # in ms
 

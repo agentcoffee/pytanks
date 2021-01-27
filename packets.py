@@ -1,5 +1,3 @@
-
-
 class InputPacket:
     def __init__(self, key_input, tank_id):
         self.key_input  = key_input

@@ -1,13 +1,14 @@
 import time
 import math
+import random
 from Xlib import X, display, threaded
 
-from vector import Vector
-from matrix import Matrix
-from matrix import RotationMatrix
-from movable import Movable
-from tank import Tank
-from projectile import Projectile
+from maths.vector import Vector
+from maths.matrix import Matrix
+from maths.matrix import RotationMatrix
+from sprites.movable import Movable
+from sprites.tank import Tank
+from sprites.projectile import Projectile
 from commands import Input
 
 
@@ -32,9 +33,9 @@ class Field:
         self.height = height
 
 class Window:
-    def __init__(self, d, p):
-        self.display    = d
-        self.pipe       = p
+    def __init__(self, display, pipe):
+        self.display    = display
+        self.pipe       = pipe
  
         self.screen = self.display.screen()
         self.window = self.screen.root.create_window(
@@ -49,26 +50,6 @@ class Window:
             )
  
         self.window.map()
-
-    def autoRepeatDetection(self):
-        events = []
-
-        i = self.display.pending_events()
-        while i > 0:
-            e = self.display.next_event()
-            i -= 1
-
-            if i >= 1 and e.type == X.KeyRelease:
-                f = self.display.next_event()
-                i -= 1
-                if f.type != X.KeyPress or e.detail != f.detail:
-                    events.insert(0, e)
-                    events.insert(0, f)
-            else:
-                events.insert(0, e)
-
-        return events
-
  
     def loop(self):
         objects      = []
@@ -85,14 +66,6 @@ class Window:
 
         self.collisions = CollisionEngine(self.field)
 
-        #movables.append(Tank(self.field, 20, 20, self.screen, self.window,
-        #    self.gc, None))
-        #movables.append(Tank(self.field, 80, 80, self.screen, self.window,
-        #    self.gc, None))
-
-        #for m in movables:
-        #    objects.append(m)
-
         while True:
             deadline = (time.monotonic_ns() / 1000000) + EVENT_LOOP_TIME
             __run_total  = (time.monotonic_ns() / 1000000) - __run_start
@@ -103,16 +76,20 @@ class Window:
             for o in objects:
                 o.draw()
                 o.action(objects)
+            # end for
 
             # Collision detection and notify involved objects
             for c in self.collisions.getCollisions(objects):
                 c[0].collision(c[1], objects)
                 c[1].collision(c[0], objects)
+            # end for
 
             # Add new tanks
             while self.pipe.poll():
                 tank_pipe = self.pipe.recv()
-                tank = Tank(self.field, 20, 20, self.screen, self.window, self.gc, tank_pipe)
+                tank = Tank(self.field,
+                        random.random() * self.field.width, random.random() * self.field.width,
+                        self.screen, self.window, self.gc, tank_pipe)
 
                 movables.append(tank)
                 objects.append(tank)
@@ -144,6 +121,7 @@ class Window:
                 elif e.type == X.KeyPress:
                     if e.detail == 9 or e.detail == 66: # ESC
                         raise SystemExit
+                # end if
             # end while
 
             __idle_start = (time.monotonic_ns() / 1000000)
@@ -160,6 +138,3 @@ class Window:
 
             __idle_total += (time.monotonic_ns() / 1000000) - __idle_start
         # end while
- 
-if __name__ == "__main__":
-    Window(display.Display()).loop()

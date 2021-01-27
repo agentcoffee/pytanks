@@ -1,7 +1,6 @@
 from enum import Enum
 from pynput import keyboard
 
-
 class Input:
 
     class Key(Enum):
