@@ -166,7 +166,7 @@ class Window:
             # Then X11 events
             for e in self.autoRepeatDetection():
                 if e.type == X.Expose:
-                    for o in objects:
+                    for o in objects.values():
                         o.draw()
                 elif e.type == X.KeyPress or e.type == X.KeyRelease:
                     if e.detail == 9 or e.detail == 66: # ESC
