@@ -92,6 +92,6 @@ class ProjectileObject(Movable, Collidable, ProjectileState):
                     position = Vector(self.position.x, self.position.y),
                     counter = 0,
                     color = None,
-                    uid = random.randbytes(2))
+                    uid = random.randint(0, 2**16))
                 ))
             objects.remove(self)

@@ -173,7 +173,7 @@ class Window:
                         raise SystemExit
                     else:
                         try:
-                            cmd_id = hex(int.from_bytes(random.randbytes(2), "little"))
+                            cmd_id = hex(random.randint(0, 2**16))
                             t = (time.monotonic_ns() / 1000000)
                             latency_map[cmd_id] = t
                             k = Input(e, cmd_id, t)

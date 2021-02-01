@@ -138,7 +138,7 @@ class TankObject(Movable, Collidable, TankState):
                     position = start,
                     angle = self.angle,
                     speed = self.speed+0.7,
-                    uid = random.randbytes(2))
+                    uid = random.randint(0, 2**16))
                 ))
 
         if self.health <= 0:
@@ -146,6 +146,6 @@ class TankObject(Movable, Collidable, TankState):
                     position = Vector(self.position.x, self.position.y),
                     counter = 0,
                     color = None,
-                    uid = random.randbytes(2))
+                    uid = random.randint(0, 2**16))
                 ))
             objects.remove(self)

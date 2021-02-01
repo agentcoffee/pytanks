@@ -64,7 +64,7 @@ class IOController:
                     a, b = Pipe()
                     new_tank = NewTank(pipe = b,
                             name = packet.tank_name,
-                            uid = random.randbytes(2))
+                            uid = random.randint(0, 2**16))
 
                     # Save the input pipe in the connections dictionary
                     self.connections[new_tank.uid] = IOController.Connection(
