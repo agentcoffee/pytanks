@@ -7,21 +7,15 @@ from maths.interval import Interval
 from sprites.drawable import Drawable
 
 
-class Movable(Drawable):
-    def __init__(self, field, x, y, angle, acceleration, deacceleration,
-            angular_speed, drag_coefficient, speed, screen, window, gc):
-        super().__init__(x, y, screen, window, gc)
-
+class Movable:
+    def __init__(self, field, acceleration, deacceleration,
+            angular_speed, drag_coefficient):
         self.field          = field
-
-        self.angle          = angle
 
         self.acceleration       = acceleration
         self.deacceleration     = deacceleration
         self.angular_speed      = angular_speed
         self.drag_coefficient   = drag_coefficient
-
-        self.speed          = speed
 
         self.accelerate     = False;
         self.deaccelerate   = False;
@@ -77,7 +71,7 @@ class Movable(Drawable):
         self.timestamp = time.monotonic_ns() / 1000000
 
     def handler(self, e):
-        return
+        raise NotImplementedError("You have to provide the handler method yourself.")
 
     def action(self, sprites):
         return
