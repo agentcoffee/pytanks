@@ -28,8 +28,8 @@ from queue import Empty
 
 # TODO make class forkable
 def f(ip, port, name):
-    graphviz = GraphvizOutput()
-    graphviz.output_file = 'cg_window.png'
+    #graphviz = GraphvizOutput()
+    #graphviz.output_file = 'cg_window.png'
 
     #with PyCallGraph(output=graphviz):
     Window(display.Display(), TCPDriver(ip, port), name).loop()
