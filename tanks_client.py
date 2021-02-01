@@ -1,8 +1,8 @@
 # Profiling
-import cProfile
-from pycallgraph import PyCallGraph
-from pycallgraph.output import GraphvizOutput
-from pstats import SortKey
+#import cProfile
+#from pycallgraph import PyCallGraph
+#from pycallgraph.output import GraphvizOutput
+#from pstats import SortKey
 import time
 
 # Includes
