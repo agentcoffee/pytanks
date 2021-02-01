@@ -68,17 +68,21 @@ class GameLoop:
 
             # First the game inputs
             for m in movables:
-                while m.input_pipe.poll():
-                    k = m.input_pipe.recv()
-                    cmd_id_list.append(k.cmd_id)
-                    debug.latency("Gameloop handled Input: {} at {}".format(
-                        k.cmd_id, (time.monotonic_ns() / 1000000)))
-                    m.handler(k)
-                    if k.event == Input.Event.PRESS:
-                        print("> " + str(k.key.name))
-                    if k.event == Input.Event.RELEASE:
-                        print("< " + str(k.key.name))
-                # end while
+                try:
+                    while m.input_pipe.poll():
+                        k = m.input_pipe.recv()
+                        cmd_id_list.append(k.cmd_id)
+                        debug.latency("Gameloop handled Input: {} at {}".format(
+                            k.cmd_id, (time.monotonic_ns() / 1000000)))
+                        m.handler(k)
+                        if k.event == Input.Event.PRESS:
+                            print("> " + str(k.key.name))
+                        if k.event == Input.Event.RELEASE:
+                            print("< " + str(k.key.name))
+                    # end while
+                except EOFError:
+                    movables.remove(m)
+                    objects.remove(m)
             # end for
 
             # Step objects

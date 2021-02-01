@@ -64,6 +64,7 @@ class TankSprite(Drawable, TankState):
         self.gc.change(foreground = fg_font)
         self.window.point    (self.gc, int(self.position.x), int(self.position.y))
         self.window.draw_text(self.gc, int(self.position.x), int(self.position.y-15), str(self.health))
+        self.window.draw_text(self.gc, int(self.position.x-5), int(self.position.y+20), str(self.name))
 
     def draw(self):
         self.drawTank(self.screen.black_pixel, self.red)

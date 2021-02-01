@@ -88,21 +88,28 @@ class IOController:
             # end try
 
             # Check existing connections
-            for c in self.connections.values():
-                while c.connection.poll():
-                    data = c.connection.get()
-                    packet = pickle.loads(data)
-                    if type(packet) is InputPacket:
-                        if packet.uid in self.connections:
-                            c.input_pipe.send(packet.key_input)
-                            debug.latency("Server dispatched Input: {} at {}".format(
-                                packet.key_input.cmd_id, (time.monotonic_ns() / 1000000)))
+            try:
+                for uid, c in self.connections.items():
+                    while c.connection.poll():
+                        data = c.connection.get()
+                        packet = pickle.loads(data)
+                        if type(packet) is InputPacket:
+                            if packet.uid in self.connections:
+                                c.input_pipe.send(packet.key_input)
+                                debug.latency("Server dispatched Input: {} at {}".format(
+                                    packet.key_input.cmd_id, (time.monotonic_ns() / 1000000)))
+                            # end if
                         # end if
-                    # end if
-                    else:
-                        raise Exception("Received garbage via existing connection")
-                # end while
-            # end for
+                        else:
+                            raise Exception("Received garbage via existing connection")
+                    # end while
+                # end for
+            except BrokenPipeError:
+                self.connections.pop(uid)
+                continue
+            except ConnectionResetError:
+                self.connections.pop(uid)
+                continue
 
             # Listening for game states to distribute
             if self.gl_win_pipe.poll():
@@ -112,11 +119,18 @@ class IOController:
                         debug.latency("Server broadcasts to Inputs: {} at {}".format(
                             data.cmd_id_list, (time.monotonic_ns() / 1000000)))
                     # Blast state to clients
-                    for c in self.connections.values():
-                        stream = pickle.dumps(StatePacket(data, c.uid))
-                        assert(len(stream) < 4096)
-                        c.connection.put( pickle.dumps(StatePacket(data, c.uid)) )
-                    # end for
+                    try:
+                        for uid, c in self.connections.items():
+                            stream = pickle.dumps(StatePacket(data, c.uid))
+                            assert(len(stream) < 4096)
+                            c.connection.put( pickle.dumps(StatePacket(data, c.uid)) )
+                        # end for
+                    except BrokenPipeError:
+                        self.connections.pop(uid)
+                    except ConnectionResetError:
+                        self.connections.pop(uid)
+                    except BlockingIOError:
+                        pass
                 # end if
             # end if
         # end while
