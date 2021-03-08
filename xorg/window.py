@@ -119,14 +119,15 @@ class Window:
 
                 #for c, t in latency_map.items():
                 for c in cmd_id_list:
-                    __t = (time.monotonic_ns() / 1000000)
-                    debug.latency("Client received response to Input: {} at {}"
-                            .format(c, __t))
-                    try:
-                        print("Latency: " + str(__t - latency_map[c]))
-                    except KeyError:
-                        print("OOOPS: Latency > 100ms, deleted key before response came!")
-                    del latency_map[c]
+                    if c in latency_map.keys():
+                        __t = (time.monotonic_ns() / 1000000)
+                        debug.latency("Client received response to Input: {} at {}"
+                                .format(c, __t))
+                        try:
+                            print("Latency: " + str(__t - latency_map[c]))
+                        except KeyError:
+                            print("OOOPS: Latency > 100ms, deleted key before response came!")
+                        del latency_map[c]
 
                 for state in states_list:
                     if state.uid in objects:

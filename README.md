@@ -1,9 +1,9 @@
-Usage:
+## Usage:
 
-Client:
+# Client:
 
-python tanks_client.py --ip <IP address of a server> --port <a port> --name <your name>
+    python tanks_client.py --ip <IP address of a server> --port <a port> --name <your name>
 
-Server:
+# Server:
 
-python start_server.py --ip <IP address of the server> --port <a port>
+    python start_server.py --ip <IP address of the server> --port <a port>

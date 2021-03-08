@@ -17,7 +17,7 @@ def start_server():
 
     print("IP: " + str(args.ip) + " : " + str(args.port))
 
-    field   = Field(300, 300)
+    field   = Field(600, 600)
 
     GameLoop(TCPServer(args.ip, args.port), field).loop()
 
