@@ -14,7 +14,6 @@ from sprites.explosion import ExplosionSprite, ExplosionState
 import debug
 from event_loop_time import EVENT_LOOP_TIME
 
-from commands import *
 from packets import *
 
 
@@ -65,9 +64,10 @@ class Window:
                 if f.type != X.KeyPress or e.detail != f.detail:
                     events.insert(0, e)
                     events.insert(0, f)
+                # end if
             else:
                 events.insert(0, e)
-
+            # end if
         return events
 
     def loop(self):
@@ -105,24 +105,28 @@ class Window:
 
             # Create new, update existing objects
             #if self.gameloop_pipe.poll():
-            game_state = None
+            packet = None
             try:
-                game_state = self.gameloop_pipe.recv_latest().state
-                assert(type(game_state) == GameState)
+                packet = self.gameloop_pipe.recv_latest()
+                assert(type(packet) == StatePacket)
             except BlockingIOError:
                 pass
 
-            if game_state is not None:
-                round_number = game_state.round_nr
-                states_list  = game_state.game_state
-                cmd_id_list  = game_state.cmd_id_list
+            if packet is not None:
+                round_number = packet.round_nr
+                states_list  = packet.game_state
+                cmd_id_list  = packet.cmd_id_list
 
-                for c, t in latency_map.items():
-                    if c in cmd_id_list:
-                        __t = (time.monotonic_ns() / 1000000)
-                        debug.latency("Client received response to Input: {} at {}"
-                                .format(c, __t))
-                        print("Latency: " + str(__t - t))
+                #for c, t in latency_map.items():
+                for c in cmd_id_list:
+                    __t = (time.monotonic_ns() / 1000000)
+                    debug.latency("Client received response to Input: {} at {}"
+                            .format(c, __t))
+                    try:
+                        print("Latency: " + str(__t - latency_map[c]))
+                    except KeyError:
+                        print("OOOPS: Latency > 100ms, deleted key before response came!")
+                    del latency_map[c]
 
                 for state in states_list:
                     if state.uid in objects:
@@ -149,13 +153,17 @@ class Window:
                 # end for
 
                 # TODO not very performant
-                uid_list = [s.uid for s in states_list]
+                uid_list      = [s.uid for s in states_list]
+                orphaned_uids = []
                 # Clean orphaned objects
                 for uid in objects:
                     if uid not in uid_list:
                         objects[uid].erase()
+                        orphaned_uids.append(uid)
                     # end if
                 # end for
+                for uid in orphaned_uids:
+                    del objects[uid]
             # end if
 
             # draw game border
@@ -176,12 +184,12 @@ class Window:
                             cmd_id = hex(random.randint(0, 2**16))
                             t = (time.monotonic_ns() / 1000000)
                             latency_map[cmd_id] = t
-                            k = Input(e, cmd_id, t)
-                            self.gameloop_pipe.send( InputPacket(k, self.tank_uid))
-                            if k.event == Input.Event.PRESS:
-                                debug.input("> " + str(k.key.name))
-                            if k.event == Input.Event.RELEASE:
-                                debug.input("< " + str(k.key.name))
+                            packet = InputPacket(self.tank_uid, e, cmd_id, t)
+                            self.gameloop_pipe.send( packet )
+                            if packet.event == InputPacket.Event.PRESS:
+                                debug.input("> " + str(packet.key.name))
+                            if packet.event == InputPacket.Event.RELEASE:
+                                debug.input("< " + str(packet.key.name))
                             debug.latency("Client sent Input: {} at {}".format(cmd_id, t))
                         except KeyError:
                             pass
@@ -195,10 +203,15 @@ class Window:
             if __idle_start > deadline:
                 print("Missed round " + str(__round_number) + " by: " +
                         str(__idle_start - deadline))
+                print(objects)
+                print(latency_map)
 
             # Ez debugging
             if (__round_number % 100) == 0:
-                pass
+                # Clean the latency_map of orphaned entries,
+                #   remove after we haven't received a response for 100 ms.
+                latency_map = {uid:timestamp for (uid, timestamp) in latency_map.items()
+                        if timestamp > __t + 100}
 
             # Coarse grained waiting
             while ( deadline - (time.monotonic_ns() / 1000000) ) > (EVENT_LOOP_TIME / 5) :

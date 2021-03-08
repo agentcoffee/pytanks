@@ -12,7 +12,7 @@ from sprites.collidable import Collidable
 from sprites.projectile import ProjectileObject, ProjectileState
 from sprites.explosion import ExplosionObject, ExplosionState
 
-from commands import Input
+from packets import InputPacket
 
 # Used to communicate the state to the clients
 class TankState:
@@ -73,7 +73,7 @@ class TankSprite(Drawable, TankState):
         self.drawTank(self.screen.white_pixel, self.screen.white_pixel)
 
 class TankObject(Movable, Collidable, TankState):
-    def __init__(self, field, input_pipe, tank_state):
+    def __init__(self, field, input_pipe, tank_state, id_generator):
         # Init the movable context
         Movable.__init__(self, field = field,
                 acceleration = 0.001,
@@ -84,6 +84,7 @@ class TankObject(Movable, Collidable, TankState):
         # Init the state
         TankState.setState(self, tank_state)
 
+        self.id_generator   = id_generator
         self.shoot = False
         self.hitbox_radius  = 8 # ~= sqrt(5*5 + 5*5)
 
@@ -96,25 +97,25 @@ class TankObject(Movable, Collidable, TankState):
         return "Tank: " + str(self.uid)
 
     def handler(self, e):
-        if e.event == Input.Event.PRESS:
-            if e.key == Input.Key.UP:
+        if e.event == InputPacket.Event.PRESS:
+            if e.key == InputPacket.Key.UP:
                 self.go(True)
-            elif e.key == Input.Key.DOWN:
+            elif e.key == InputPacket.Key.DOWN:
                 self.stop(True)
-            elif e.key == Input.Key.LEFT:
+            elif e.key == InputPacket.Key.LEFT:
                 self.rotate(True, -1)
-            elif e.key == Input.Key.RIGHT:
+            elif e.key == InputPacket.Key.RIGHT:
                 self.rotate(True, 1)
-            elif e.key == Input.Key.SPACE:
+            elif e.key == InputPacket.Key.SPACE:
                 self.shoot = True
-        elif e.event == Input.Event.RELEASE:
-            if e.key == Input.Key.UP:
+        elif e.event == InputPacket.Event.RELEASE:
+            if e.key == InputPacket.Key.UP:
                 self.go(False)
-            elif e.key == Input.Key.DOWN:
+            elif e.key == InputPacket.Key.DOWN:
                 self.stop(False)
-            elif e.key == Input.Key.LEFT:
+            elif e.key == InputPacket.Key.LEFT:
                 self.rotate(False, -1)
-            elif e.key == Input.Key.RIGHT:
+            elif e.key == InputPacket.Key.RIGHT:
                 self.rotate(False, 1)
 
     def getCollisionBox(self):
@@ -139,7 +140,7 @@ class TankObject(Movable, Collidable, TankState):
                     position = start,
                     angle = self.angle,
                     speed = self.speed+0.7,
-                    uid = random.randint(0, 2**16))
+                    uid = self.id_generator.get())
                 ))
 
         if self.health <= 0:
@@ -147,6 +148,6 @@ class TankObject(Movable, Collidable, TankState):
                     position = Vector(self.position.x, self.position.y),
                     counter = 0,
                     color = None,
-                    uid = random.randint(0, 2**16))
+                    uid = self.id_generator.get())
                 ))
             objects.remove(self)

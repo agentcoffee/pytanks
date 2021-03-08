@@ -78,4 +78,5 @@ class Telegram:
         return tmp
 
     def close(self):
+        print("Cleaning Telegram")
         self.connection.close()

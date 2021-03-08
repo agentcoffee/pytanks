@@ -1,4 +1,4 @@
-DEBUG_LATENCY=False
+DEBUG_LATENCY=True
 DEBUG_INPUT=False
 
 def latency(msg):

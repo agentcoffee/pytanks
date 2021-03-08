@@ -18,21 +18,12 @@ from Xlib import X, display, threaded
 
 from packets import * 
 
-from commands import Input
 from xorg.window import Window
 #from telegram import Telegram
-from tcp_driver import TCPDriver
+from tcp_driver import TCPClient
 
 # Exceptions
 from queue import Empty
-
-# TODO make class forkable
-def f(ip, port, name):
-    #graphviz = GraphvizOutput()
-    #graphviz.output_file = 'cg_window.png'
-
-    #with PyCallGraph(output=graphviz):
-    Window(display.Display(), TCPDriver(ip, port), name).loop()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -54,8 +45,12 @@ if __name__ == "__main__":
     try:
         termios.tcsetattr(fd, termios.TCSADRAIN, new)
 
-        window_p = Process(target = f, args = (args.ip, args.port, args.name))
-        window_p.start()
+        #graphviz = GraphvizOutput()
+        #graphviz.output_file = 'cg_window.png'
+
+        #with PyCallGraph(output=graphviz):
+
+        Window(display.Display(), TCPClient(args.ip, args.port), args.name).loop()
 
         #cProfile.run('GameClient(args.ip, args.port, args.name).loop()',
         #        sort=SortKey.CUMULATIVE)
