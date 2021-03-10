@@ -204,8 +204,6 @@ class Window:
             if __idle_start > deadline:
                 print("Missed round " + str(__round_number) + " by: " +
                         str(__idle_start - deadline))
-                print(objects)
-                print(latency_map)
 
             # Ez debugging
             if (__round_number % 100) == 0:

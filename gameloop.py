@@ -24,16 +24,80 @@ class CollisionEngine:
     def __init__(self, field):
         self.field = field
 
-    def getCollisions(self, objects):
+    def get_collisions(self, objects):
         collisions = []
         for i in range(0, len(objects)):
             for j in range(i+1, len(objects)):
                 if objects[i].collides(objects[j]):
                     collisions.append((objects[i], objects[j]))
+                # end if
+            # end for
+        # end for
         return collisions
+
+    def split_x(self, objects, inf, sup):
+        if objects is []:
+            return []
+        # end if
+
+        if len(objects) < 5:
+            return self.get_collisions(objects)
+        # end if
+
+        left_half  = []
+        right_half = []
+        neither    = []
+
+        middle     = (inf + (sup - inf + 1) / 2)
+
+        for o in objects:
+            if o.getPosition().x + o.getHitboxRadius() < middle:
+                left_half.append(o)
+            elif o.getPosition().x - o.getHitboxRadius() >= middle:
+                right_half.append(o)
+            else:
+                neither.append(o)
+            # end if
+        # end for
+
+        collisions_left    = self.split_x(left_half,  inf, middle-1)
+        collisions_right   = self.split_x(right_half, middle, sup)
+        collisions_neither = self.get_collisions(neither)
+        # TODO split_y for neither?
+
+        for o in neither:
+            for p in left_half:
+                if o.collides(p):
+                    collisions_left.append((o, p))
+                # end if
+            # end for
+            for p in right_half:
+                if o.collides(p):
+                    collisions_left.append((o, p))
+                # end if
+            # end for
+        # end for
+
+        return collisions_left + collisions_right + collisions_neither
+
+    def run(self, objects):
+        return self.split_x(objects, self.field.x_inf, self.field.x_sup)
+
+# The Field class is interpreted as:
+#
+#  y_sup  ^
+#         |
+#         |
+#  y_inf  0------>
+#       x_inf   x_sup
+#
 
 class Field:
     def __init__(self, width, height):
+        self.x_inf  = 1
+        self.x_sup  = width
+        self.y_inf  = 1
+        self.y_sup  = height
         self.width  = width
         self.height = height
 
@@ -84,7 +148,6 @@ class GameLoop:
                     while m.input_pipe.poll():
                         k = pickle.loads(m.input_pipe.get())
                         if type(k) is InputPacket:
-                            print("df")
                             cmd_id_list.append(k.cmd_id)
                             debug.latency("Gameloop handled Input: {} at {}".format(
                                 k.cmd_id, (time.monotonic_ns() / 1000000)))
@@ -110,7 +173,7 @@ class GameLoop:
 
             # Collision detection and notify involved objects
             # TODO: not very performant
-            for c in self.collisions.getCollisions([o for o in objects if isinstance(o, Collidable)]):
+            for c in self.collisions.run([o for o in objects if isinstance(o, Collidable)]):
                 c[0].collision(c[1])
                 c[1].collision(c[0])
             # end for
@@ -138,8 +201,10 @@ class GameLoop:
                                 input_pipe = client,
                                 tank_state = TankState(
                                     position = Vector(
-                                        x = random.random() * self.field.width,
-                                        y = random.random() * self.field.height),
+                                        x = self.field.x_inf +
+                                            random.random() * (self.field.x_sup - self.field.x_inf + 1),
+                                        y = self.field.y_inf +
+                                            random.random() * (self.field.y_sup - self.field.y_inf + 1)),
                                     angle = math.pi/2,
                                     speed = 0,
                                     health = 100,
@@ -164,13 +229,16 @@ class GameLoop:
             # end if
 
             # Ez debugging
-            if (__round_number % 1000) == 0:
-                print("Game State : " + str(game_state.game_state))
+            if (__round_number % 100) == 0:
                 print("[ idle %: " +
                         str(100 * __idle_total / __run_total) + " round: " +
                         str(__round_number) + " ]")
 
             __idle_start = (time.monotonic_ns() / 1000000)
+
+            if __idle_start > deadline:
+                print("Missed round " + str(__round_number) + " by: " +
+                        str(__idle_start - deadline))
 
             # Coarse grained waiting
             while ( deadline - (time.monotonic_ns() / 1000000) ) > (EVENT_LOOP_TIME / 5) :

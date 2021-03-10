@@ -29,7 +29,6 @@ class Matrix:
             return Vector(self.a * other.x + self.b * other.y,
                           self.c * other.x + self.d * other.y)
 
-
     def __rmul__(self, other):
         return Matrix(self.a * other.a + self.b * other.c,
                       self.a * other.b + self.b * other.d,

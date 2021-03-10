@@ -3,7 +3,13 @@ from maths.interval import Interval
 
 class Collidable:
     def getCollisionBox(self):
-        raise NotImplementedError("You have to provide the collisionBox method yourself.")
+        raise NotImplementedError("You have to provide the getCollisionBox method yourself.")
+
+    def getHitboxRadius(self):
+        raise NotImplementedError("You have to provide the getHitboxRadius method yourself.")
+
+    def getPosition(self):
+        raise NotImplementedError("You have to provide the getPosition method yourself.")
 
     # Check for a collision
     def collides(self, other):

@@ -1,3 +1,7 @@
+# Profiling
+from pycallgraph import PyCallGraph
+from pycallgraph.output import GraphvizOutput
+
 from Xlib import X, display, threaded
 import argparse
 
@@ -19,7 +23,13 @@ def start_server():
 
     field   = Field(600, 600)
 
-    GameLoop(TCPServer(args.ip, args.port), field).loop()
+    graphviz = GraphvizOutput()
+    graphviz.output_file = 'cg_window_server.png'
+
+    with PyCallGraph(output=graphviz):
+        GameLoop(TCPServer(args.ip, args.port), field).loop()
+
+    #GameLoop(TCPServer(args.ip, args.port), field).loop()
 
 if __name__ == "__main__":
     start_server()

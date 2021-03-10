@@ -1,8 +1,10 @@
 # Profiling
-#import cProfile
 #from pycallgraph import PyCallGraph
 #from pycallgraph.output import GraphvizOutput
+
+#import cProfile
 #from pstats import SortKey
+
 import time
 
 # Includes
@@ -49,6 +51,7 @@ if __name__ == "__main__":
         #graphviz.output_file = 'cg_window.png'
 
         #with PyCallGraph(output=graphviz):
+        #    Window(display.Display(), TCPClient(args.ip, args.port), args.name).loop()
 
         Window(display.Display(), TCPClient(args.ip, args.port), args.name).loop()
 

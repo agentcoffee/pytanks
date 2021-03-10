@@ -2,6 +2,7 @@ import math
 import random
 from Xlib import X, threaded
 
+import debug
 import sprites.tank
 from maths.vector import Vector
 from maths.matrix import RotationMatrix
@@ -23,7 +24,6 @@ class ProjectileState:
         return ProjectileState(self.position, self.angle, self.speed, self.uid)
 
     def setState(self, projectile_state):
-        assert(type(projectile_state) == ProjectileState)
         self.position = projectile_state.position
         self.angle    = projectile_state.angle
         self.speed    = projectile_state.speed
@@ -40,10 +40,14 @@ class ProjectileSprite(Drawable, ProjectileState):
 
     def drawProjectile(self, fg_color):
         self.gc.change(foreground = fg_color)
-        placed_image = [self.position + RotationMatrix(self.angle) * dot for dot in self.image]
+        #placed_image = [self.position + RotationMatrix(self.angle) * dot for dot in self.image]
 
+        #self.window.poly_line(self.gc, X.CoordModeOrigin,
+        #        [(int(dot.x), int(dot.y)) for dot in placed_image])
         self.window.poly_line(self.gc, X.CoordModeOrigin,
-                [(int(dot.x), int(dot.y)) for dot in placed_image])
+                [ ( int(self.position.x), int(self.position.y) ),
+                  ( int(self.position.x + 4 * math.cos(self.angle)),
+                    int(self.position.y + 4 * math.sin(self.angle)) )])
 
     def draw(self):
         self.drawProjectile(self.red)
@@ -65,10 +69,16 @@ class ProjectileObject(Movable, Collidable, ProjectileState):
         self.go(True)
         self.explode = False
 
-        print("Instantiated Projectile x = {} y = {}".format(self.position.x, self.position.y))
+        debug.objects("Instantiated Projectile x = {} y = {}".format(self.position.x, self.position.y))
 
     def __str__(self):
         return "Projectile: " + self.uid
+
+    def getPosition(self):
+        return self.position
+
+    def getHitboxRadius(self):
+        return self.hitbox_radius
 
     def getCollisionBox(self):
         return (Interval(self.position.x - self.hitbox_radius,
@@ -83,8 +93,8 @@ class ProjectileObject(Movable, Collidable, ProjectileState):
     def step(self, objects):
         self.update()
 
-        if self.position.x >= self.field.width or self.position.x <= 0 or \
-           self.position.y >= self.field.height or self.position.y <= 0:
+        if self.position.x >= self.field.x_sup or self.position.x <= self.field.x_inf or \
+           self.position.y >= self.field.y_sup or self.position.y <= self.field.y_inf:
             objects.remove(self)
 
         if self.explode == True:

@@ -42,7 +42,7 @@ class ExplosionSprite(Drawable, ExplosionState):
                 [(int(dot.x), int(dot.y)) for dot in placed_image])
 
     def draw(self):
-        self.drawExplosion(self.green) # TODO variable explosion color
+        self.drawExplosion(self.red) # TODO variable explosion color
 
     def erase(self):
         self.drawExplosion(self.white)
@@ -60,7 +60,7 @@ class ExplosionObject(ExplosionState):
         t = time.monotonic_ns() / 1000000
         if t - self.timestamp > EXPANSION_TIME:
             self.timestamp = time.monotonic_ns() / 1000000
-            self.counter += 1
+            self.counter -= 1
 
-        if self.counter == 5:
+        if self.counter == 0:
             objects.remove(self)

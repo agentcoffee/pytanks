@@ -1,1 +1,1 @@
-EVENT_LOOP_TIME = 5 #in ms
+EVENT_LOOP_TIME = 20 #in ms

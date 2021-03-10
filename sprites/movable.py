@@ -48,15 +48,15 @@ class Movable:
         direction = RotationMatrix(self.angle) * Vector(1, 0)
         self.position += (self.speed * t * direction)
 
-        if self.position.x > self.field.width:
-            self.position.x = self.field.width
-        elif self.position.x < 0:
-            self.position.x = 0
+        if self.position.x > self.field.x_sup:
+            self.position.x = self.field.x_sup
+        elif self.position.x < self.field.x_inf:
+            self.position.x = self.field.x_inf
 
-        if self.position.y > self.field.height:
-            self.position.y = self.field.height
-        elif self.position.y < 0:
-            self.position.y = 0
+        if self.position.y > self.field.y_sup:
+            self.position.y = self.field.y_sup
+        elif self.position.y < self.field.y_inf:
+            self.position.y = self.field.y_inf
 
     def rotate(self, v, d):
         self.turn           = v

@@ -2,6 +2,7 @@ import math
 import random
 from Xlib import X, threaded
 
+import debug
 from maths.vector import Vector
 from maths.matrix import RotationMatrix
 from maths.interval import Interval
@@ -49,7 +50,7 @@ class TankSprite(Drawable, TankState):
                       Vector(5, 5),   Vector(5, 1),   Vector(10, 1),
                       Vector(10, -1), Vector(5, -1),  Vector(5, -5)]
 
-        print("Instantiated TankSprite {}".format(self.name, self.position.x, self.position.y))
+        debug.objects("Instantiated TankSprite {}".format(self.name, self.position.x, self.position.y))
 
     def __str__(self):
         return "TankSprite: " + str(self.uid)
@@ -118,6 +119,12 @@ class TankObject(Movable, Collidable, TankState):
             elif e.key == InputPacket.Key.RIGHT:
                 self.rotate(False, 1)
 
+    def getPosition(self):
+        return self.position
+
+    def getHitboxRadius(self):
+        return self.hitbox_radius
+
     def getCollisionBox(self):
         return (Interval(self.position.x - self.hitbox_radius,
                          self.position.x + self.hitbox_radius),
@@ -133,20 +140,25 @@ class TankObject(Movable, Collidable, TankState):
 
         if self.shoot == True:
             self.shoot = False
+            #a = self.angle - 0.5
+            #while a < self.angle + 0.5:
+            #    start      = self.position + RotationMatrix(a) * Vector(20, 0)
             start      = self.position + RotationMatrix(self.angle) * Vector(20, 0)
             objects.append(ProjectileObject(
                 field = self.field,
                 projectile_state = ProjectileState(
                     position = start,
                     angle = self.angle,
+                    #angle = a,
                     speed = self.speed+0.7,
                     uid = self.id_generator.get())
                 ))
+            #    a += 0.01
 
         if self.health <= 0:
             objects.append(ExplosionObject(explosion_state = ExplosionState(
                     position = Vector(self.position.x, self.position.y),
-                    counter = 0,
+                    counter = 5,
                     color = None,
                     uid = self.id_generator.get())
                 ))

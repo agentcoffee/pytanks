@@ -15,7 +15,7 @@ class Telegram:
             pass
 
     def _get_next_telegram(self):
-        if len(self.stream_buffer) > 0:
+        if len(self.stream_buffer) >= 2:
             length_lo = self.stream_buffer[0]
             length_hi = self.stream_buffer[1]
             length = (length_hi << 8) | (length_lo)
@@ -30,7 +30,7 @@ class Telegram:
     def poll(self):
         self._fetch_from_socket(4096)
 
-        if len(self.stream_buffer) > 0:
+        if len(self.stream_buffer) >= 2:
             length_lo = self.stream_buffer[0]
             length_hi = self.stream_buffer[1]
             length = (length_hi << 8) | (length_lo)
