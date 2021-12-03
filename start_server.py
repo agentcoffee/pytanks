@@ -2,14 +2,10 @@
 from pycallgraph import PyCallGraph
 from pycallgraph.output import GraphvizOutput
 
-from Xlib import X, display, threaded
 import argparse
-
-from multiprocessing import Process, Pipe
 
 from gameloop import GameLoop, Field
 from drivers.tcp_driver import TCPServer
-from xorg.window import Window
 
 def start_server():
     parser = argparse.ArgumentParser()

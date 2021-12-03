@@ -14,14 +14,11 @@ import argparse
 import termios
 import sys
 
-from multiprocessing import Process, Pipe
-
 from Xlib import X, display, threaded
 
 from packets import * 
 
-from xorg.window import Window
-#from telegram import Telegram
+from clients.xorg.window import Window
 from drivers.tcp_driver import TCPConnection
 
 # Exceptions

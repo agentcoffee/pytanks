@@ -13,7 +13,7 @@ from sprites.projectile import ProjectileSprite, ProjectileState
 from sprites.explosion import ExplosionSprite, ExplosionState
 
 import debug
-from event_loop_time import EVENT_LOOP_TIME
+from config.event_loop_time import EVENT_LOOP_TIME
 
 from packets import *
 

@@ -3,8 +3,6 @@ import math
 import random
 import pickle
 
-from Xlib import X, display, threaded
-
 from packets import * 
 
 from client import ClientState
@@ -18,7 +16,7 @@ from sprites.projectile import ProjectileObject
 from unique_id import UniqueID
 
 import debug
-from event_loop_time import EVENT_LOOP_TIME
+from config.event_loop_time import EVENT_LOOP_TIME
 
 
 class CollisionEngine:
@@ -125,6 +123,22 @@ class GameLoop:
         clients      = []
         objects      = []
 
+        # dummy tank
+        self.tank = TankObject(
+                        field = self.field,
+                        tank_state = TankState(
+                            position = Vector(
+                                x = self.field.x_inf +
+                                    random.random() * (self.field.x_sup - self.field.x_inf + 1),
+                                y = self.field.y_inf +
+                                    random.random() * (self.field.y_sup - self.field.y_inf + 1)),
+                            angle = math.pi/2,
+                            speed = 0,
+                            health = 100,
+                            name = "Dummy1",
+                            uid = self.id_generator.get()),
+                        id_generator = self.id_generator)
+
         # Diagnostic variables
         __round_number = 0
         __idle_total = 0
@@ -142,8 +156,7 @@ class GameLoop:
             # Blast the game state back
             object_states = []
             for c in clients:
-                if c.state is ClientState.READY:
-                    object_states += [ o.getState() for o in c.get_movables() ]
+                object_states += [ o.getState() for o in c.get_movables() ]
 
             object_states += [ o.getState() for o in objects ]
 
@@ -166,7 +179,7 @@ class GameLoop:
             clients = [ c for c in clients if c.state is not ClientState.DEAD ]
 
             # Step all the movables connected to clients
-            for c in [ c for c in clients if c.state is ClientState.READY ]:
+            for c in clients:
                 for m in c.get_movables():
                     m.step(objects)
 
@@ -177,7 +190,7 @@ class GameLoop:
             # Collision detection and notify involved objects
             # TODO: not very performant
             collidables  = [ o for o in objects if isinstance(o, Collidable) ]
-            for c in [ c for c in clients if c.state is ClientState.READY ]:
+            for c in clients:
                 for m in c.get_movables():
                     collidables += [ m ]
 
