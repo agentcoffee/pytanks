@@ -74,7 +74,7 @@ class TankSprite(Drawable, TankState):
         self.drawTank(self.screen.white_pixel, self.screen.white_pixel)
 
 class TankObject(Movable, Collidable, TankState):
-    def __init__(self, field, input_pipe, tank_state, id_generator):
+    def __init__(self, field, tank_state, id_generator):
         # Init the movable context
         Movable.__init__(self, field = field,
                 acceleration = 0.001,
@@ -86,10 +86,9 @@ class TankObject(Movable, Collidable, TankState):
         TankState.setState(self, tank_state)
 
         self.id_generator   = id_generator
+        self.id             = id_generator.get()
         self.shoot = False
         self.hitbox_radius  = 8 # ~= sqrt(5*5 + 5*5)
-
-        self.input_pipe     = input_pipe
 
         print("Instantiated TankObject {} : x = {} y = {}"
                 .format(self.name, self.position.x, self.position.y))
@@ -162,4 +161,3 @@ class TankObject(Movable, Collidable, TankState):
                     color = None,
                     uid = self.id_generator.get())
                 ))
-            objects.remove(self)

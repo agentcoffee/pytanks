@@ -8,7 +8,7 @@ import argparse
 from multiprocessing import Process, Pipe
 
 from gameloop import GameLoop, Field
-from tcp_driver import TCPServer
+from drivers.tcp_driver import TCPServer
 from xorg.window import Window
 
 def start_server():
@@ -21,7 +21,7 @@ def start_server():
 
     print("IP: " + str(args.ip) + " : " + str(args.port))
 
-    field   = Field(600, 600)
+    field   = Field(400, 400)
 
     graphviz = GraphvizOutput()
     graphviz.output_file = 'cg_window_server.png'

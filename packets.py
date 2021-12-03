@@ -62,3 +62,11 @@ class JoinAckPacket:
     def __init__(self, uid, field):
         self.uid    = uid
         self.field  = field
+
+class TankDiedPacket:
+    def __init__(self, uid):
+        self.uid    = uid
+
+class LeavePacket:
+    def __init__(self, uid):
+        self.uid    = uid

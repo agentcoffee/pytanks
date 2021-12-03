@@ -1,9 +1,9 @@
 import socket
 import pickle
+from client   import TankClient
 from telegram import Telegram
 
 class TCPServer:
-    # TODO: the client pickles here, do the same for the server
     def __init__(self, ip, port):
         self.ip        = ip
         self.port      = port
@@ -12,49 +12,41 @@ class TCPServer:
         self.socket.listen()
         self.socket.setblocking(False)
         print("Socket bound to " + ip + ":" + str(port))
-        self.connections      = []
-
         print("TCPServer: Connected")
-        self.telegram = Telegram(self.socket)
-
-    def __iter__(self):
-        return iter(self.connections)
 
     def accept(self):
+        """
+        Accept new TCP connections, wrap them in a Client and return them.
+        """
         tcp_socket, addr = self.socket.accept()
         telegram         = Telegram(tcp_socket)
-        self.connections.append(telegram)
-        return telegram
 
-    def drop(self):
-        pass
+        return TankClient(telegram)
 
     def close(self):
         print("Cleaning clients")
-        for c in self.connections:
-            c.close()
         self.socket.close()
 
-class TCPClient:
+class TCPConnection:
     def __init__(self, ip, port):
         self.ip     = ip
         self.port   = port
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
         self.socket.connect( (ip, port) )
 
-        print("TCPClient: Connected")
+        print("TCPConnection: Connected")
         self.telegram = Telegram(self.socket)
 
-    def send(self, msg):
+    def put(self, msg):
         self.telegram.put(pickle.dumps(msg))
 
-    def recv(self):
+    def get(self):
         return pickle.loads(self.telegram.get())
 
-    def blocking_recv(self):
+    def blocking_get(self):
         return pickle.loads(self.telegram.blocking_get())
 
-    def recv_latest(self):
+    def get_latest(self):
         return pickle.loads(self.telegram.get_latest())
 
     def close(self):

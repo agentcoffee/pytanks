@@ -2,6 +2,7 @@ import time
 import math
 import random
 from Xlib import X, display, threaded
+from enum import Enum
 
 from maths.vector import Vector
 from maths.matrix import Matrix
@@ -16,26 +17,34 @@ from event_loop_time import EVENT_LOOP_TIME
 
 from packets import *
 
+class PlayerState(Enum):
+    JOINING   = 1
+    PLAYING   = 2
+    TANK_DIED = 3
+    EXIT      = 4
 
 class Window:
-    def __init__(self, display, gameloop_pipe, tank_name):
+    def __init__(self, display, connection, tank_name):
         # Game init
-        self.gameloop_pipe = gameloop_pipe
-        self.gameloop_pipe.send( JoinReqPacket(tank_name) )
-        print("Sent JoinReq, Listening ...")
-
-        packet = self.gameloop_pipe.blocking_recv()
-        print("Caught packet")
-        if type(packet) is not JoinAckPacket:
-            raise Exception("Received garbage on connection accept")
-
-        self.tank_uid = packet.uid
-        self.field    = packet.field
+        self.connection = connection
+        self.state      = PlayerState.JOINING
 
         # X11 init
         self.display        = display
         self.tank_name      = tank_name
  
+        print("Sent Initial JoinReq, Listening ...")
+        self.connection.put( JoinReqPacket(self.tank_name) )
+
+        packet = self.connection.blocking_get()
+
+        if type(packet) == JoinAckPacket:
+            self.state    = PlayerState.PLAYING
+            self.tank_uid = packet.uid
+            self.field    = packet.field
+        else:
+            raise Exception("Expected JoinAck, got {}".format(type(packet)))
+
         self.screen = self.display.screen()
         self.window = self.screen.root.create_window(
             10, 10, self.field.width, self.field.height, 1,
@@ -64,10 +73,8 @@ class Window:
                 if f.type != X.KeyPress or e.detail != f.detail:
                     events.insert(0, e)
                     events.insert(0, f)
-                # end if
             else:
                 events.insert(0, e)
-            # end if
         return events
 
     def loop(self):
@@ -75,7 +82,7 @@ class Window:
             self._loop()
         finally:
             print("Cleaning up")
-            self.gameloop_pipe.close()
+            self.connection.close()
  
     def _loop(self):
         ROLLING_AVERAGE_SIZE = 5
@@ -103,69 +110,84 @@ class Window:
 
             self.display.sync()
 
-            # Create new, update existing objects
-            #if self.gameloop_pipe.poll():
-            packet = None
-            try:
-                packet = self.gameloop_pipe.recv_latest()
-                assert(type(packet) == StatePacket)
-            except BlockingIOError:
-                pass
+            if self.state is PlayerState.JOINING:
+                print("Sent JoinReq, Listening ...")
+                self.connection.put( JoinReqPacket(self.tank_name) )
 
-            if packet is not None:
-                round_number = packet.round_nr
-                states_list  = packet.game_state
-                cmd_id_list  = packet.cmd_id_list
+                if self.connection.poll():
+                    packet = self.connection.get()
 
-                #for c, t in latency_map.items():
-                for c in cmd_id_list:
-                    if c in latency_map.keys():
-                        __t = (time.monotonic_ns() / 1000000)
-                        debug.latency("Client received response to Input: {} at {}"
-                                .format(c, __t))
-                        try:
-                            print("Latency: " + str(__t - latency_map[c]))
-                        except KeyError:
-                            print("OOOPS: Latency > 100ms, deleted key before response came!")
-                        del latency_map[c]
+                    if type(packet) == JoinAckPacket():
+                        self.state    = PlayerState.PLAYING
+                        self.tank_uid = packet.uid
+                        self.field    = packet.field
 
-                for state in states_list:
-                    if state.uid in objects:
-                        objects[state.uid].erase()
-                        objects[state.uid].setState(state)
-                    else:
-                        if   type(state) is TankState:
-                            objects[state.uid] = TankSprite(
-                                self.screen, self.window, self.gc,
-                                state)
-                        elif type(state) is ProjectileState:
-                            objects[state.uid] = ProjectileSprite(
-                                self.screen, self.window, self.gc,
-                                state)
-                        elif type(state) is ExplosionState:
-                            objects[state.uid] = ExplosionSprite(
-                                self.screen, self.window, self.gc,
-                                state)
-                        else:
-                            raise NotImplementedError(type(state))
-                        # end if
-                    # end if
-                    objects[state.uid].draw()
-                # end for
+            elif self.state is PlayerState.PLAYING:
+                # Get the lates state packet
+                packet = None
 
-                # TODO not very performant
-                uid_list      = [s.uid for s in states_list]
-                orphaned_uids = []
-                # Clean orphaned objects
-                for uid in objects:
-                    if uid not in uid_list:
-                        objects[uid].erase()
-                        orphaned_uids.append(uid)
-                    # end if
-                # end for
-                for uid in orphaned_uids:
-                    del objects[uid]
-            # end if
+                try:
+                    while True:
+                        packet = self.connection.get()
+                except BlockingIOError:
+                    pass
+
+                if packet is not None:
+                    if type(packet) is StatePacket:
+                        round_number = packet.round_nr
+                        states_list  = packet.game_state
+                        cmd_id_list  = packet.cmd_id_list
+
+                        for c in cmd_id_list:
+                            if c in latency_map.keys():
+                                __t = (time.monotonic_ns() / 1000000)
+                                debug.latency("Client received response to Input: {} at {}" .format(c, __t))
+                                try:
+                                    print("Latency: " + str(__t - latency_map[c]))
+                                except KeyError:
+                                    print("OOOPS: Latency > 100ms, deleted key before response came!")
+                                del latency_map[c]
+
+                        for state in states_list:
+                            if state.uid in objects:
+                                objects[state.uid].erase()
+                                objects[state.uid].setState(state)
+                            else:
+                                if   type(state) is TankState:
+                                    objects[state.uid] = TankSprite(
+                                        self.screen, self.window, self.gc, state)
+                                elif type(state) is ProjectileState:
+                                    objects[state.uid] = ProjectileSprite(
+                                        self.screen, self.window, self.gc, state)
+                                elif type(state) is ExplosionState:
+                                    objects[state.uid] = ExplosionSprite(
+                                        self.screen, self.window, self.gc, state)
+                                else:
+                                    raise NotImplementedError(type(state))
+                            objects[state.uid].draw()
+
+                        # TODO not very performant
+                        uid_list      = [s.uid for s in states_list]
+                        orphaned_uids = []
+                        # Clean orphaned objects
+                        for uid in objects:
+                            if uid not in uid_list:
+                                objects[uid].erase()
+                                orphaned_uids.append(uid)
+
+                        for uid in orphaned_uids:
+                            del objects[uid]
+
+                    elif type(packet) is TankDiedPacket:
+                        self.state = PlayerState.TANK_DIED
+
+            elif self.state is PlayerState.TANK_DIED:
+                print("You died.")
+
+            elif self.state is PlayerState.EXIT:
+                print("Disconnecting from the server")
+                self.connection.put( LeavePacket(self.tank_uid) )
+                return
 
             # draw game border
             self.gc.change(foreground = self.screen.black_pixel)
@@ -179,14 +201,14 @@ class Window:
                         o.draw()
                 elif e.type == X.KeyPress or e.type == X.KeyRelease:
                     if e.detail == 9 or e.detail == 66: # ESC
-                        raise SystemExit
+                        self.state = PlayerState.EXIT
                     else:
                         try:
                             cmd_id = hex(random.randint(0, 2**16))
                             t = (time.monotonic_ns() / 1000000)
                             latency_map[cmd_id] = t
                             packet = InputPacket(self.tank_uid, e, cmd_id, t)
-                            self.gameloop_pipe.send( packet )
+                            self.connection.put( packet )
                             if packet.event == InputPacket.Event.PRESS:
                                 debug.input("> " + str(packet.key.name))
                             if packet.event == InputPacket.Event.RELEASE:
@@ -194,8 +216,6 @@ class Window:
                             debug.latency("Client sent Input: {} at {}".format(cmd_id, t))
                         except KeyError:
                             pass
-                # end if
-            # end for
 
             round_number += 1
 
@@ -215,13 +235,10 @@ class Window:
             # Coarse grained waiting
             while ( deadline - (time.monotonic_ns() / 1000000) ) > (EVENT_LOOP_TIME / 5) :
                 time.sleep( EVENT_LOOP_TIME / (5 * 1000) )
-            # end while
 
             # Fine grained waiting
             while time.monotonic_ns() / 1000000 < deadline:
                 continue
-            # end while
 
             __idle_total   += (time.monotonic_ns() / 1000000) - __idle_start
             __round_number += 1
-        # end while

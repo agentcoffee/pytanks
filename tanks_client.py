@@ -22,7 +22,7 @@ from packets import *
 
 from xorg.window import Window
 #from telegram import Telegram
-from tcp_driver import TCPClient
+from drivers.tcp_driver import TCPConnection
 
 # Exceptions
 from queue import Empty
@@ -51,9 +51,9 @@ if __name__ == "__main__":
         #graphviz.output_file = 'cg_window.png'
 
         #with PyCallGraph(output=graphviz):
-        #    Window(display.Display(), TCPClient(args.ip, args.port), args.name).loop()
+        #    Window(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
 
-        Window(display.Display(), TCPClient(args.ip, args.port), args.name).loop()
+        Window(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
 
         #cProfile.run('GameClient(args.ip, args.port, args.name).loop()',
         #        sort=SortKey.CUMULATIVE)

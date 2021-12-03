@@ -7,6 +7,7 @@ from Xlib import X, display, threaded
 
 from packets import * 
 
+from client import ClientState
 from maths.vector import Vector
 from maths.matrix import Matrix
 from maths.matrix import RotationMatrix
@@ -110,14 +111,21 @@ class GameLoop:
     def loop(self):
         try:
             self.gameloop()
+        except KeyboardInterrupt:
+            print("CTRL-C received")
         finally:
             print("Cleanup")
             self.io_server.close()
  
     def gameloop(self):
-        idle_clients = []
+        """
+        @objects are all objects which want to be placed on the gamefield.
+            Thats any tank, any projectile and also texts, for example.
+        """
+        clients      = []
         objects      = []
-        movables     = []
+
+        # Diagnostic variables
         __round_number = 0
         __idle_total = 0
         __run_start  = (time.monotonic_ns() / 1000000)
@@ -132,101 +140,57 @@ class GameLoop:
             __run_total = __t - __run_start
 
             # Blast the game state back
-            game_state = StatePacket(__round_number, [o.getState() for o in objects], cmd_id_list)
-            for client in self.io_server:
-                client.put(pickle.dumps(game_state))
+            object_states = []
+            for c in clients:
+                if c.state is ClientState.READY:
+                    object_states += [ o.getState() for o in c.get_movables() ]
 
+            object_states += [ o.getState() for o in objects ]
+
+            game_state = StatePacket(__round_number, object_states, cmd_id_list)
+            for c in [ c for c in clients if c.state is ClientState.READY ]:
+                c.put(game_state)
+
+            # Diagnostics
             if len(cmd_id_list) != 0:
                 debug.latency("Gameloop replied to Inputs: {} at {}".format(
                     cmd_id_list, (time.monotonic_ns() / 1000000)))
 
             cmd_id_list = []
 
-            # First the game inputs
-            for m in movables:
-                try:
-                    while m.input_pipe.poll():
-                        k = pickle.loads(m.input_pipe.get())
-                        if type(k) is InputPacket:
-                            cmd_id_list.append(k.cmd_id)
-                            debug.latency("Gameloop handled Input: {} at {}".format(
-                                k.cmd_id, (time.monotonic_ns() / 1000000)))
-                            m.handler(k)
-                            if k.event == InputPacket.Event.PRESS:
-                                debug.input("> " + str(k.key.name))
-                            # end if
-                            if k.event == InputPacket.Event.RELEASE:
-                                debug.input("< " + str(k.key.name))
-                            # end if
-                        # end if
-                    # end while
-                except EOFError:
-                    movables.remove(m)
-                    objects.remove(m)
-                # end try
-            # end for
+            # Advance the client state machine. Add a Tank, process inputs, etc.
+            for c in clients:
+                c.step(self.field, self.id_generator, cmd_id_list)
 
-            # Step objects
+            # Sort out dead clients
+            clients = [ c for c in clients if c.state is not ClientState.DEAD ]
+
+            # Step all the movables connected to clients
+            for c in [ c for c in clients if c.state is ClientState.READY ]:
+                for m in c.get_movables():
+                    m.step(objects)
+
+            # Step all the objects, the movables might have appended some
             for o in objects:
                 o.step(objects)
-            # end for
 
             # Collision detection and notify involved objects
             # TODO: not very performant
-            for c in self.collisions.run([o for o in objects if isinstance(o, Collidable)]):
+            collidables  = [ o for o in objects if isinstance(o, Collidable) ]
+            for c in [ c for c in clients if c.state is ClientState.READY ]:
+                for m in c.get_movables():
+                    collidables += [ m ]
+
+            for c in self.collisions.run(collidables):
                 c[0].collision(c[1])
                 c[1].collision(c[0])
-            # end for
 
             # check if somebody wants to join
             try:
                 client = self.io_server.accept()
-                idle_clients.append(client)
+                clients.append(client)
             except BlockingIOError:
                 pass
-            # end try
-
-            # Only allow 1 client per loop iteration:
-            #   No particular reason for this, but removing while iterating is
-            #   a hassle, and this makes it very easy. The restriction (1
-            #   client per iteration) is very acceptable (and also saves us
-            #   from DDOS attacks, at least here).
-            if len(idle_clients) > 0:
-                client = idle_clients[0]
-                if client.poll():
-                    packet = pickle.loads(client.get())
-                    if type(packet) is JoinReqPacket:
-                        tank = TankObject(
-                                field = self.field,
-                                input_pipe = client,
-                                tank_state = TankState(
-                                    position = Vector(
-                                        x = self.field.x_inf +
-                                            random.random() * (self.field.x_sup - self.field.x_inf + 1),
-                                        y = self.field.y_inf +
-                                            random.random() * (self.field.y_sup - self.field.y_inf + 1)),
-                                    angle = math.pi/2,
-                                    speed = 0,
-                                    health = 100,
-                                    name = packet.tank_name,
-                                    uid = self.id_generator.get()),
-                                id_generator = self.id_generator)
-
-                        movables.append(tank)
-                        objects.append(tank)
-                        client.put(pickle.dumps(JoinAckPacket(tank.uid, self.field)))
-                        # Client answered, got a Tank, now remove him from the
-                        # queue.
-                        idle_clients = idle_clients[1:]
-                    else:
-                        raise Exception("Expected JoinReqPacket, got something else.")
-                    # end if
-                else:
-                    # Round Robin: client did not answer, set him back in the
-                    # queue (if there is one).
-                    idle_clients = idle_clients[1:].append(client)
-                # end if
-            # end if
 
             # Ez debugging
             if (__round_number % 100) == 0:
