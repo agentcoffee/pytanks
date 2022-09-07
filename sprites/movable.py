@@ -17,10 +17,10 @@ class Movable:
         self.angular_speed      = angular_speed
         self.drag_coefficient   = drag_coefficient
 
-        self.accelerate     = False;
-        self.deaccelerate   = False;
-        self.turn           = False;
-        self.angular_sign   = 1;
+        self.accelerate     = False
+        self.deaccelerate   = False
+        self.turn           = False
+        self.angular_sign   = 1
 
         self.timestamp      = 0
 
@@ -59,16 +59,16 @@ class Movable:
             self.position.y = self.field.y_inf
 
     def rotate(self, v, d):
-        self.turn           = v
-        self.angular_sign   = d
+        self.turn         = v
+        self.angular_sign = d
 
     def go(self, v):
         self.accelerate = v
-        self.timestamp = time.monotonic_ns() / 1000000
+        self.timestamp  = time.monotonic_ns() / 1000000
 
     def stop(self, v):
         self.deaccelerate = v
-        self.timestamp = time.monotonic_ns() / 1000000
+        self.timestamp    = time.monotonic_ns() / 1000000
 
     def handler(self, e):
         raise NotImplementedError("You have to provide the handler method yourself.")

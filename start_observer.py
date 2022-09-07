@@ -11,12 +11,15 @@ import time
 import socket
 import pickle
 import argparse
+import termios
 import sys
+
+from Xlib import X, display, threaded
 
 from packets import * 
 
-from players.robots.easy import EasyRobot
-from drivers.tcp_driver import TCPConnection
+from players.xorg.observer import Observer
+from drivers.tcp_driver  import TCPConnection
 
 # Exceptions
 from queue import Empty
@@ -38,7 +41,7 @@ if __name__ == "__main__":
     #with PyCallGraph(output=graphviz):
     #    Window(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
 
-    EasyRobot(TCPConnection(args.ip, args.port), args.name).loop()
+    Observer(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
 
     #cProfile.run('GameClient(args.ip, args.port, args.name).loop()',
     #        sort=SortKey.CUMULATIVE)

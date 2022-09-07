@@ -62,6 +62,9 @@ class TankSprite(Drawable, TankState):
         self.window.poly_line(self.gc, X.CoordModeOrigin,
                 [(int(dot.x), int(dot.y)) for dot in placed_image])
 
+        #self.window.poly_line(self.gc, X.CoordModeOrigin,
+        #        [(0, 0), (int(self.position.x), int(self.position.y))])
+
         self.gc.change(foreground = fg_font)
         self.window.point    (self.gc, int(self.position.x), int(self.position.y))
         self.window.draw_text(self.gc, int(self.position.x), int(self.position.y-15), str(self.health))
@@ -150,14 +153,13 @@ class TankObject(Movable, Collidable, TankState):
                     angle = self.angle,
                     #angle = a,
                     speed = self.speed+0.7,
-                    uid = self.id_generator.get())
-                ))
+                    uid = self.id_generator.get()),
+                id_generator = self.id_generator))
             #    a += 0.01
 
         if self.health <= 0:
             objects.append(ExplosionObject(explosion_state = ExplosionState(
+                    uid = self.id_generator.get(),
                     position = Vector(self.position.x, self.position.y),
-                    counter = 5,
-                    color = None,
-                    uid = self.id_generator.get())
+                    size = 5)
                 ))

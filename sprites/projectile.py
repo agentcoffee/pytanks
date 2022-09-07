@@ -35,8 +35,8 @@ class ProjectileSprite(Drawable, ProjectileState):
 
         ProjectileState.setState(self, projectile_state)
 
-        self.image         = [Vector(2, 2),  Vector(2, -2), Vector(-2, -2),
-                              Vector(-2, 2), Vector(2, 2)]
+        self.image = [Vector(2, 2),  Vector(2, -2), Vector(-2, -2),
+                      Vector(-2, 2), Vector(2, 2)]
 
     def drawProjectile(self, fg_color):
         self.gc.change(foreground = fg_color)
@@ -56,7 +56,7 @@ class ProjectileSprite(Drawable, ProjectileState):
         self.drawProjectile(self.screen.white_pixel)
 
 class ProjectileObject(Movable, Collidable, ProjectileState):
-    def __init__(self, field, projectile_state):
+    def __init__(self, field, projectile_state, id_generator):
         Movable.__init__(self, field = field,
                 acceleration = 0,
                 deacceleration = 0.0005,
@@ -68,6 +68,7 @@ class ProjectileObject(Movable, Collidable, ProjectileState):
         self.hitbox_radius = 3 # ~= sqrt(2*2 + 2*2)
         self.go(True)
         self.explode = False
+        self.id_generator = id_generator
 
         debug.objects("Instantiated Projectile x = {} y = {}".format(self.position.x, self.position.y))
 
@@ -91,17 +92,20 @@ class ProjectileObject(Movable, Collidable, ProjectileState):
             self.explode = True
 
     def step(self, objects):
+        remove = False
         self.update()
 
         if self.position.x >= self.field.x_sup or self.position.x <= self.field.x_inf or \
            self.position.y >= self.field.y_sup or self.position.y <= self.field.y_inf:
-            objects.remove(self)
+            remove = True
 
         if self.explode == True:
             objects.append(ExplosionObject(explosion_state = ExplosionState(
+                    uid = self.id_generator.get(),
                     position = Vector(self.position.x, self.position.y),
-                    counter = 0,
-                    color = None,
-                    uid = random.randint(0, 2**16))
+                    size = 4)
                 ))
+            remove = True
+
+        if remove:
             objects.remove(self)

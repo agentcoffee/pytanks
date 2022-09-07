@@ -8,21 +8,23 @@ from sprites.collidable import Collidable
 EXPANSION_TIME = 100 # in ms
 
 class ExplosionState:
-    def __init__(self, position, color, counter, uid):
+    def __init__(self, uid, position, color=None, counter=0, size=5):
+        self.uid      = uid
         self.position = position
         self.color    = color
         self.counter  = counter
-        self.uid      = uid
+        self.size     = size
 
     def getState(self):
-        return ExplosionState(self.position, self.color, self.counter, self.uid)
+        return ExplosionState(self.uid, self.position, self.color, self.counter, self.size)
 
     def setState(self, explosion_state):
         assert(type(explosion_state) == ExplosionState)
+        self.uid      = explosion_state.uid
         self.position = explosion_state.position
         self.color    = explosion_state.color
         self.counter  = explosion_state.counter
-        self.uid      = explosion_state.uid
+        self.size     = explosion_state.size
 
 class ExplosionSprite(Drawable, ExplosionState):
     def __init__(self, screen, window, gc, explosion_state):
@@ -34,10 +36,8 @@ class ExplosionSprite(Drawable, ExplosionState):
                       Vector(-1, 1), Vector(1, 1)]
 
     def drawExplosion(self, fg):
-        self.image = [self.counter * dot for dot in self.image]
-
         self.gc.change(foreground = fg)
-        placed_image = [self.position + dot for dot in self.image]
+        placed_image = [self.position + self.counter * dot for dot in self.image]
         self.window.poly_line(self.gc, X.CoordModeOrigin,
                 [(int(dot.x), int(dot.y)) for dot in placed_image])
 
@@ -60,7 +60,7 @@ class ExplosionObject(ExplosionState):
         t = time.monotonic_ns() / 1000000
         if t - self.timestamp > EXPANSION_TIME:
             self.timestamp = time.monotonic_ns() / 1000000
-            self.counter -= 1
+            self.counter += 1
 
-        if self.counter == 0:
+        if self.counter == self.size:
             objects.remove(self)

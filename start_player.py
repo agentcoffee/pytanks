@@ -18,8 +18,8 @@ from Xlib import X, display, threaded
 
 from packets import * 
 
-from clients.xorg.window import Window
-from drivers.tcp_driver import TCPConnection
+from players.xorg.player import Player
+from drivers.tcp_driver  import TCPConnection
 
 # Exceptions
 from queue import Empty
@@ -50,7 +50,7 @@ if __name__ == "__main__":
         #with PyCallGraph(output=graphviz):
         #    Window(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
 
-        Window(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
+        Player(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
 
         #cProfile.run('GameClient(args.ip, args.port, args.name).loop()',
         #        sort=SortKey.CUMULATIVE)

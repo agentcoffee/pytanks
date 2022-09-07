@@ -4,27 +4,26 @@ import time
 
 import math
 import debug
-
-from maths.vector import Vector
-from packets import *
 from enum import Enum
-from sprites.tank import TankObject, TankState
 
-class ClientState(Enum):
-    WAITING = 1
-    READY   = 2
-    DEAD    = 3
+from packets import *
+from maths.vector import Vector
+from sprites.tank import TankObject, TankState
+from clients.state_enum import ClientState
 
 class TankClient:
     def __init__(self, connection):
-        print("New Client instantiated")
+        print("New TankClient instantiated")
 
         self.connection = connection
         self.state      = ClientState.WAITING
         self.name       = "New Client"
 
     def get_movables(self):
-        return [ self.tank ]
+        if self.state is ClientState.READY:
+            return [ self.tank ]
+        else:
+            return [ ]
 
     def step(self, field=None, id_generator=None, cmd_id_list=None):
         """
@@ -59,10 +58,10 @@ class TankClient:
         after which it will be handed to the gameloop.
         """
 
-        if self.connection.poll():
+        if self.poll():
             packet = self.get()
 
-            if type(packet) is JoinReqPacket:
+            if type(packet) is CreateTankPacket:
                 self.name = packet.tank_name
                 self.tank = TankObject(
                                 field = field,
@@ -79,7 +78,7 @@ class TankClient:
                                     uid = id_generator.get()),
                                 id_generator = id_generator)
 
-                self.put(JoinAckPacket(self.tank.uid, field))
+                self.put(TankAckPacket(self.tank.uid))
                 self.state = ClientState.READY
                 print("Client {} moves to READY".format(self.name))
 
@@ -97,14 +96,15 @@ class TankClient:
         """
 
         # check if the tank died
-        if self.tank.health == 0:
-            self.connection.put(TankDiedPacket(self.tank.uid))
+        if self.tank.health <= 0:
+            self.put(TankDiedPacket(self.tank.uid))
             self.state = ClientState.WAITING
+            self.tank = None # remove reference, let garbage collector do its job
         else:
             # else process inputs
             # TODO: bound this, this shouldn't be a while
-            while self.connection.poll():
-                packet = pickle.loads(self.connection.get())
+            while self.poll():
+                packet = self.get()
 
                 if type(packet) is InputPacket:
                     if cmd_id_list is not None:
@@ -147,3 +147,6 @@ class TankClient:
         except (BrokenPipeError, ConnectionResetError):
             print("Client '{}' died unexpectedly.".format(self.name))
             self.state = ClientState.DEAD
+
+    def close(self):
+        self.connection.close()

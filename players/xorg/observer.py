@@ -11,45 +11,46 @@ from sprites.movable import Movable
 from sprites.tank import TankSprite, TankState
 from sprites.projectile import ProjectileSprite, ProjectileState
 from sprites.explosion import ExplosionSprite, ExplosionState
+from clients.type_enum import ClientType
 
 import debug
 from config.event_loop_time import EVENT_LOOP_TIME
 
 from packets import *
 
-class Window:
-    def __init__(self, display, connection, tank_name):
+class ObserverState(Enum):
+    JOINING   = 1
+    OBSERVING = 2
+    EXIT      = 3
+
+class Observer:
+    def __init__(self, display, connection, name):
         # Game init
         self.connection = connection
-        self.state      = PlayerState.JOINING
-
+        self.state      = ObserverState.JOINING
         # X11 init
-        self.display        = display
-        self.tank_name      = tank_name
+        self.display    = display
  
         print("Sent Initial JoinReq, Listening ...")
-        self.connection.put( JoinReqPacket(self.tank_name) )
+        self.connection.put( JoinReqPacket(ClientType.OBSERVER) )
 
         packet = self.connection.blocking_get()
 
         if type(packet) == JoinAckPacket:
-            self.state    = PlayerState.PLAYING
-            self.tank_uid = packet.uid
-            self.field    = packet.field
+            self.field = packet.field
         else:
             raise Exception("Expected JoinAck, got {}".format(type(packet)))
+        self.state = ObserverState.OBSERVING
 
         self.screen = self.display.screen()
         self.window = self.screen.root.create_window(
             10, 10, self.field.width, self.field.height, 1,
             self.screen.root_depth,
             background_pixel=self.screen.white_pixel,
-            event_mask=X.ExposureMask | X.KeyPressMask | X.KeyReleaseMask,
-            )
+            event_mask=X.ExposureMask | X.KeyPressMask | X.KeyReleaseMask )
         self.gc = self.window.create_gc(
             foreground = self.screen.black_pixel,
-            background = self.screen.white_pixel,
-            )
+            background = self.screen.white_pixel )
  
         self.window.map()
 
@@ -83,13 +84,10 @@ class Window:
 
         objects      = {}
         round_number = 0
-        latency_map  = {}
 
         __run_start        = (time.monotonic_ns() / 1000000)
         __idle_total       = 0
         __round_number     = 0
-        __update_intervals = [0] * ROLLING_AVERAGE_SIZE
-        __update_timestamp = 0
 
         e = self.display.next_event()
 
@@ -104,19 +102,7 @@ class Window:
 
             self.display.sync()
 
-            if self.state is PlayerState.JOINING:
-                print("Sent JoinReq, Listening ...")
-                self.connection.put( JoinReqPacket(self.tank_name) )
-
-                if self.connection.poll():
-                    packet = self.connection.get()
-
-                    if type(packet) == JoinAckPacket():
-                        self.state    = PlayerState.PLAYING
-                        self.tank_uid = packet.uid
-                        self.field    = packet.field
-
-            elif self.state is PlayerState.PLAYING:
+            if self.state is ObserverState.OBSERVING:
                 # Get the lates state packet
                 packet = None
 
@@ -131,16 +117,6 @@ class Window:
                         round_number = packet.round_nr
                         states_list  = packet.game_state
                         cmd_id_list  = packet.cmd_id_list
-
-                        for c in cmd_id_list:
-                            if c in latency_map.keys():
-                                __t = (time.monotonic_ns() / 1000000)
-                                debug.latency("Client received response to Input: {} at {}" .format(c, __t))
-                                try:
-                                    print("Latency: " + str(__t - latency_map[c]))
-                                except KeyError:
-                                    print("OOOPS: Latency > 100ms, deleted key before response came!")
-                                del latency_map[c]
 
                         for state in states_list:
                             if state.uid in objects:
@@ -172,15 +148,9 @@ class Window:
                         for uid in orphaned_uids:
                             del objects[uid]
 
-                    elif type(packet) is TankDiedPacket:
-                        self.state = PlayerState.TANK_DIED
-
-            elif self.state is PlayerState.TANK_DIED:
-                print("You died.")
-
-            elif self.state is PlayerState.EXIT:
+            elif self.state is ObserverState.EXIT:
                 print("Disconnecting from the server")
-                self.connection.put( LeavePacket(self.tank_uid) )
+                self.connection.put( LeavePacket(0) )
                 return
 
             # draw game border
@@ -195,21 +165,7 @@ class Window:
                         o.draw()
                 elif e.type == X.KeyPress or e.type == X.KeyRelease:
                     if e.detail == 9 or e.detail == 66: # ESC
-                        self.state = PlayerState.EXIT
-                    else:
-                        try:
-                            cmd_id = hex(random.randint(0, 2**16))
-                            t = (time.monotonic_ns() / 1000000)
-                            latency_map[cmd_id] = t
-                            packet = InputPacket(self.tank_uid, e, cmd_id, t)
-                            self.connection.put( packet )
-                            if packet.event == InputPacket.Event.PRESS:
-                                debug.input("> " + str(packet.key.name))
-                            if packet.event == InputPacket.Event.RELEASE:
-                                debug.input("< " + str(packet.key.name))
-                            debug.latency("Client sent Input: {} at {}".format(cmd_id, t))
-                        except KeyError:
-                            pass
+                        self.state = ObserverState.EXIT
 
             round_number += 1
 
@@ -218,13 +174,6 @@ class Window:
             if __idle_start > deadline:
                 print("Missed round " + str(__round_number) + " by: " +
                         str(__idle_start - deadline))
-
-            # Ez debugging
-            if (__round_number % 100) == 0:
-                # Clean the latency_map of orphaned entries,
-                #   remove after we haven't received a response for 100 ms.
-                latency_map = {uid:timestamp for (uid, timestamp) in latency_map.items()
-                        if timestamp > __t + 100}
 
             # Coarse grained waiting
             while ( deadline - (time.monotonic_ns() / 1000000) ) > (EVENT_LOOP_TIME / 5) :

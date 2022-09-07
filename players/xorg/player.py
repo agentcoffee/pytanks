@@ -11,6 +11,7 @@ from sprites.movable import Movable
 from sprites.tank import TankSprite, TankState
 from sprites.projectile import ProjectileSprite, ProjectileState
 from sprites.explosion import ExplosionSprite, ExplosionState
+from clients.type_enum import ClientType
 
 import debug
 from config.event_loop_time import EVENT_LOOP_TIME
@@ -23,7 +24,7 @@ class PlayerState(Enum):
     TANK_DIED = 3
     EXIT      = 4
 
-class Window:
+class Player:
     def __init__(self, display, connection, tank_name):
         # Game init
         self.connection = connection
@@ -34,14 +35,12 @@ class Window:
         self.tank_name      = tank_name
  
         print("Sent Initial JoinReq, Listening ...")
-        self.connection.put( JoinReqPacket(self.tank_name) )
+        self.connection.put( JoinReqPacket(ClientType.TANK) )
 
         packet = self.connection.blocking_get()
 
         if type(packet) == JoinAckPacket:
-            self.state    = PlayerState.PLAYING
-            self.tank_uid = packet.uid
-            self.field    = packet.field
+            self.field = packet.field
         else:
             raise Exception("Expected JoinAck, got {}".format(type(packet)))
 
@@ -112,15 +111,14 @@ class Window:
 
             if self.state is PlayerState.JOINING:
                 print("Sent JoinReq, Listening ...")
-                self.connection.put( JoinReqPacket(self.tank_name) )
+                self.connection.put( CreateTankPacket(self.tank_name) )
 
                 if self.connection.poll():
                     packet = self.connection.get()
 
-                    if type(packet) == JoinAckPacket():
+                    if type(packet) == TankAckPacket:
                         self.state    = PlayerState.PLAYING
                         self.tank_uid = packet.uid
-                        self.field    = packet.field
 
             elif self.state is PlayerState.PLAYING:
                 # Get the lates state packet
@@ -183,6 +181,7 @@ class Window:
 
             elif self.state is PlayerState.TANK_DIED:
                 print("You died.")
+                self.state = PlayerState.EXIT
 
             elif self.state is PlayerState.EXIT:
                 print("Disconnecting from the server")
@@ -204,10 +203,32 @@ class Window:
                         self.state = PlayerState.EXIT
                     else:
                         try:
+                            if e.type is X.KeyPress:
+                                event = InputPacket.Event.PRESS
+                            elif e.type is X.KeyRelease:
+                                event = InputPacket.Event.RELEASE
+                            else:
+                                raise NotImplementedError
+
+                            if e.detail == 111:
+                                key = InputPacket.Key.UP
+                            elif e.detail == 116:
+                                key = InputPacket.Key.DOWN
+                            elif e.detail == 113:
+                                key = InputPacket.Key.LEFT
+                            elif e.detail == 114:
+                                key = InputPacket.Key.RIGHT
+                            elif e.detail == 65:
+                                key = InputPacket.Key.SPACE
+                            elif e.detail == 66:
+                                key = InputPacket.Key.ESC
+                            else:
+                                raise KeyError
+
                             cmd_id = hex(random.randint(0, 2**16))
                             t = (time.monotonic_ns() / 1000000)
                             latency_map[cmd_id] = t
-                            packet = InputPacket(self.tank_uid, e, cmd_id, t)
+                            packet = InputPacket(self.tank_uid, key, event, cmd_id, t)
                             self.connection.put( packet )
                             if packet.event == InputPacket.Event.PRESS:
                                 debug.input("> " + str(packet.key.name))
