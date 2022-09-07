@@ -53,7 +53,7 @@ class TankClient:
 
     def state_waiting(self, field, id_generator):
         """
-        Function to step throught initial handshake of this client. This
+        Function to step through initial handshake of this client. This
         function is called by the server class until it returns CLIENT_READY,
         after which it will be handed to the gameloop.
         """

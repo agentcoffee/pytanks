@@ -1,6 +1,6 @@
 # Profiling
-from pycallgraph import PyCallGraph
-from pycallgraph.output import GraphvizOutput
+from pycallgraph3 import PyCallGraph
+from pycallgraph3.output import GraphvizOutput
 
 import argparse
 

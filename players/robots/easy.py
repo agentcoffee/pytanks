@@ -31,7 +31,7 @@ class EasyRobot:
         self.tank_name  = tank_name
         self.target     = "esteban"
         self.input      = None
-        self.move       = None
+        self.move       = False
         self.shoot_timeout = 0
  
         print("Sent Initial JoinReq, Listening ...")
@@ -195,14 +195,19 @@ class EasyRobot:
                 commands.append(InputPacket(self.tank_uid,
                     InputPacket.Key.LEFT, InputPacket.Event.PRESS))
 
-            if shoot_line.length() > 100:
+            if self.move == False:
                 commands.append(InputPacket(self.tank_uid,
                     InputPacket.Key.UP, InputPacket.Event.PRESS))
                 self.move = True
-            elif self.move is True:
-                commands.append(InputPacket(self.tank_uid,
-                    InputPacket.Key.UP, InputPacket.Event.RELEASE))
-                self.move = False
+
+#            if shoot_line.length() > 100:
+#                commands.append(InputPacket(self.tank_uid,
+#                    InputPacket.Key.UP, InputPacket.Event.PRESS))
+#                self.move = True
+#            elif self.move is True:
+#                commands.append(InputPacket(self.tank_uid,
+#                    InputPacket.Key.UP, InputPacket.Event.RELEASE))
+#                self.move = False
 
         except UnboundLocalError:
             pass

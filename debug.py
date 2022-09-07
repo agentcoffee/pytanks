@@ -1,6 +1,6 @@
-DEBUG_LATENCY=False
-DEBUG_INPUT  =False
-DEBUG_OBJECTS=False
+DEBUG_LATENCY = False
+DEBUG_INPUT   = True
+DEBUG_OBJECTS = False
 
 def latency(msg):
     if DEBUG_LATENCY:
