@@ -23,6 +23,103 @@ class PlayerState(Enum):
     TANK_DIED = 3
     EXIT      = 4
 
+class Commands:
+    def __init__(self, tank_uid):
+        self.tank_uid = tank_uid
+
+        self.go_sem    = 0
+        self.stop_sem  = 0
+        self.left_sem  = 0
+        self.right_sem = 0
+        self.shoot_sem = 0
+
+        self.commands = []
+
+    def get_commands(self):
+        if self.go_sem == 1:
+            self.__go_release()
+        elif self.go_sem == 2:
+            self.go_sem = 1
+
+        if self.stop_sem == 1:
+            self.__stop_release()
+        elif self.stop_sem == 2:
+            self.stop_sem = 1
+
+        if self.left_sem == 1:
+            self.__left_release()
+        elif self.left_sem == 2:
+            self.left_sem = 1
+
+        if self.right_sem == 1:
+            self.__right_release()
+        elif self.right_sem == 2:
+            self.right_sem = 1
+
+        if self.shoot_sem == 1:
+            self.__shoot_release()
+        elif self.shoot_sem == 2:
+            self.shoot_sem = 1
+
+        t = self.commands
+        self.commands = []
+        return t
+
+    def go(self):
+        if self.go_sem == 0:
+            self.commands.append(InputPacket(self.tank_uid,
+                InputPacket.Key.UP, InputPacket.Event.PRESS))
+        self.go_sem = 2
+
+    def __go_release(self):
+        self.commands.append(InputPacket(self.tank_uid,
+            InputPacket.Key.UP, InputPacket.Event.RELEASE))
+        self.go_sem = 0
+
+    def stop(self):
+        if self.down_sem == 0:
+            self.commands.append(InputPacket(self.tank_uid,
+                InputPacket.Key.DOWN, InputPacket.Event.PRESS))
+        self.down_sem = 2
+
+    def __stop_release(self):
+        self.commands.append(InputPacket(self.tank_uid,
+            InputPacket.Key.DOWN, InputPacket.Event.RELEASE))
+        self.down_sem = 0
+
+    def left(self):
+        if self.left_sem == 0:
+            self.commands.append(InputPacket(self.tank_uid,
+                InputPacket.Key.LEFT, InputPacket.Event.PRESS))
+        self.left_sem = 2
+
+    def __left_release(self):
+        self.commands.append(InputPacket(self.tank_uid,
+            InputPacket.Key.LEFT, InputPacket.Event.RELEASE))
+        self.left_sem = 0
+
+    def right(self):
+        if self.right_sem == 0:
+            self.commands.append(InputPacket(self.tank_uid,
+                InputPacket.Key.RIGHT, InputPacket.Event.PRESS))
+        self.right_sem = 2
+
+    def __right_release(self):
+        self.commands.append(InputPacket(self.tank_uid,
+            InputPacket.Key.RIGHT, InputPacket.Event.RELEASE))
+        self.right_sem = 0
+
+    def shoot(self):
+        if self.shoot_sem == 0:
+            self.commands.append(InputPacket(self.tank_uid,
+                InputPacket.Key.SPACE, InputPacket.Event.PRESS))
+        self.shoot_sem = 2
+
+    def __shoot_release(self):
+        self.commands.append(InputPacket(self.tank_uid,
+            InputPacket.Key.SPACE, InputPacket.Event.RELEASE))
+        self.shoot_sem = 0
+
 class EasyRobot:
     def __init__(self, connection, tank_name):
         # Game init
@@ -30,8 +127,6 @@ class EasyRobot:
         self.state      = PlayerState.JOINING
         self.tank_name  = tank_name
         self.target     = "esteban"
-        self.input      = None
-        self.move       = False
         self.shoot_timeout = 0
  
         print("Sent Initial JoinReq, Listening ...")
@@ -56,6 +151,7 @@ class EasyRobot:
 
         objects      = {}
         round_number = 0
+        commands     = None
 
         __run_start        = (time.monotonic_ns() / 1000000)
         __idle_total       = 0
@@ -77,6 +173,7 @@ class EasyRobot:
                     if type(packet) == TankAckPacket:
                         self.state    = PlayerState.PLAYING
                         self.tank_uid = packet.uid
+                        commands      = Commands(self.tank_uid)
 
             elif self.state is PlayerState.PLAYING:
                 # Get the lates state packet
@@ -94,9 +191,9 @@ class EasyRobot:
                         states_list  = packet.game_state
                         cmd_id_list  = packet.cmd_id_list
 
-                        responses = self.robot_compute(states_list)
+                        self.robot_compute(states_list, commands)
 
-                        for m in responses:
+                        for m in commands.get_commands():
                             self.connection.put(m)
 
                     elif type(packet) is TankDiedPacket:
@@ -130,9 +227,7 @@ class EasyRobot:
             __idle_total   += (time.monotonic_ns() / 1000000) - __idle_start
             __round_number += 1
 
-    def robot_compute(self, states_list):
-        commands = []
-
+    def robot_compute(self, states_list, commands):
         for s in states_list:
             if type(s) is TankState and s.name == self.tank_name:
                 me = s
@@ -168,48 +263,21 @@ class EasyRobot:
                 angle_diff =  (2*math.pi + angle_diff)
 
             if -0.1 < angle_diff < 0.1:
-                if self.input is not None:
-                    commands.append(InputPacket(self.tank_uid,
-                        self.input, InputPacket.Event.RELEASE))
-
-                if (time.time() - self.shoot_timeout) > 0.1:
+                if (time.time() - self.shoot_timeout) > 5:
                     self.shoot_timeout = time.time()
-                    commands.append(InputPacket(self.tank_uid,
-                        InputPacket.Key.SPACE, InputPacket.Event.PRESS))
-
-                self.input = None
+                    commands.shoot()
             elif angle_diff > 0:
-                if self.input is not None:
-                    commands.append(InputPacket(self.tank_uid,
-                        self.input, InputPacket.Event.RELEASE))
-
-                self.input = InputPacket.Key.RIGHT
-                commands.append(InputPacket(self.tank_uid,
-                    InputPacket.Key.RIGHT, InputPacket.Event.PRESS))
+                commands.right()
             else:
-                if self.input is not None:
-                    commands.append(InputPacket(self.tank_uid,
-                        self.input, InputPacket.Event.RELEASE))
+                commands.left()
 
-                self.input = InputPacket.Key.LEFT
-                commands.append(InputPacket(self.tank_uid,
-                    InputPacket.Key.LEFT, InputPacket.Event.PRESS))
+            if shoot_line.length() > 100:
+                commands.go()
 
-            if self.move == False:
-                commands.append(InputPacket(self.tank_uid,
-                    InputPacket.Key.UP, InputPacket.Event.PRESS))
-                self.move = True
-
-#            if shoot_line.length() > 100:
-#                commands.append(InputPacket(self.tank_uid,
-#                    InputPacket.Key.UP, InputPacket.Event.PRESS))
-#                self.move = True
-#            elif self.move is True:
-#                commands.append(InputPacket(self.tank_uid,
-#                    InputPacket.Key.UP, InputPacket.Event.RELEASE))
-#                self.move = False
-
-        except UnboundLocalError:
+        except UnboundLocalError as e:
+            print(e)
             pass
 
-        return commands
+        except ZeroDivisionError as e:
+            print(e)
+            pass
