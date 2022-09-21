@@ -28,7 +28,7 @@ class Movable:
         return "pos: " + str(self.position) + \
                " speed: " + str(self.speed)
 
-    def update(self):
+    def update(self, objects):
         t = ((time.monotonic_ns() / 1000000) - self.timestamp)
         self.timestamp = time.monotonic_ns() / 1000000
 
@@ -48,15 +48,10 @@ class Movable:
         direction = RotationMatrix(self.angle) * Vector(1, 0)
         self.position += (self.speed * t * direction)
 
-        if self.position.x > self.field.x_sup:
-            self.position.x = self.field.x_sup
-        elif self.position.x < self.field.x_inf:
-            self.position.x = self.field.x_inf
-
-        if self.position.y > self.field.y_sup:
-            self.position.y = self.field.y_sup
-        elif self.position.y < self.field.y_inf:
-            self.position.y = self.field.y_inf
+        for o in objects:
+            if o.collides(self):
+                o.collision(self)
+                self.collsision(o)
 
     def rotate(self, v, d):
         self.turn         = v

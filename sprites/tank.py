@@ -89,7 +89,7 @@ class TankObject(Movable, Collidable, TankState):
         TankState.setState(self, tank_state)
 
         self.id_generator   = id_generator
-        self.id             = id_generator.get()
+        #self.id             = id_generator.get() # We are assigned an ID in TankState
         self.shoot = False
         self.hitbox_radius  = 8 # ~= sqrt(5*5 + 5*5)
 
@@ -121,13 +121,16 @@ class TankObject(Movable, Collidable, TankState):
             elif e.key == InputPacket.Key.RIGHT:
                 self.rotate(False, 1)
 
-    def getPosition(self):
+    # TODO rename to get_position
+    def get_position(self):
         return self.position
 
-    def getHitboxRadius(self):
+    # TODO rename to get_hitboxradius
+    def get_hitboxradius(self):
         return self.hitbox_radius
 
-    def getCollisionBox(self):
+    # TODO rename to get_collisionbox
+    def get_collisionbox(self):
         return (Interval(self.position.x - self.hitbox_radius,
                          self.position.x + self.hitbox_radius),
                 Interval(self.position.y - self.hitbox_radius,
@@ -136,6 +139,11 @@ class TankObject(Movable, Collidable, TankState):
     def collision(self, other):
         if isinstance(other, ProjectileObject):
             self.health -= 10
+
+        if isinstance(other, FieldObject):
+            # TODO
+            #self.position
+            pass
 
     def step(self, objects):
         self.update()

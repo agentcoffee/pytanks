@@ -75,13 +75,13 @@ class ProjectileObject(Movable, Collidable, ProjectileState):
     def __str__(self):
         return "Projectile: " + self.uid
 
-    def getPosition(self):
+    def get_position(self):
         return self.position
 
-    def getHitboxRadius(self):
+    def get_hitboxradius(self):
         return self.hitbox_radius
 
-    def getCollisionBox(self):
+    def get_collisionbox(self):
         return (Interval(self.position.x - self.hitbox_radius,
                          self.position.x + self.hitbox_radius),
                 Interval(self.position.y - self.hitbox_radius,

@@ -2,21 +2,23 @@ from maths.interval import Interval
 
 
 class Collidable:
-    def getCollisionBox(self):
-        raise NotImplementedError("You have to provide the getCollisionBox method yourself.")
+    def get_collisionbox(self):
+        raise NotImplementedError("You have to provide the get_collisionbox method yourself.")
 
-    def getHitboxRadius(self):
-        raise NotImplementedError("You have to provide the getHitboxRadius method yourself.")
+    def get_hitboxradius(self):
+        raise NotImplementedError("You have to provide the get_hitboxradius method yourself.")
 
-    def getPosition(self):
-        raise NotImplementedError("You have to provide the getPosition method yourself.")
+    def get_position(self):
+        raise NotImplementedError("You have to provide the get_position method yourself.")
 
     # Check for a collision
     def collides(self, other):
-        box      = self.getCollisionBox()
-        otherBox = other.getCollisionBox()
+        box      = self.get_collisionbox()
+        otherBox = other.get_collisionbox()
 
         if box[0].overlaps(otherBox[0]) and box[1].overlaps(otherBox[1]):
+            # TODO this is just a coarse box checking, we could do the better
+            # 'hitcircle'
             return True
         else:
             return False

@@ -89,7 +89,7 @@ class CollisionEngine:
 #  y_sup  v
 #
 
-class Field:
+class Field(Collidable):
     def __init__(self, width, height):
         self.x_inf  = 1
         self.x_sup  = width
@@ -97,6 +97,19 @@ class Field:
         self.y_sup  = height
         self.width  = width
         self.height = height
+        self.collisionbox = (Interval(self.x_inf, self.x_sup,
+                                      inverted = True),
+                             Interval(self.y_inf, self.y_sup,
+                                      inverted = True))
+
+    def get_collisionbox(self):
+        return self.collisionbox
+
+    def get_hitboxradius(self):
+        raise NotImplementedError("The field has no hitbox.")
+
+    def get_position(self):
+        raise NotImplementedError("The field has no position.")
 
 class GameLoop:
     def __init__(self, io_server, field):
