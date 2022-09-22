@@ -46,6 +46,7 @@ class Movable:
             self.angle += self.angular_speed * self.angular_sign * t
 
         direction = RotationMatrix(self.angle) * Vector(1, 0)
+        old_position = self.position
         self.position += (self.speed * t * direction)
 
         for o in objects:

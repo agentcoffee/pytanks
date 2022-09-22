@@ -101,7 +101,7 @@ class TankClient:
             self.state = ClientState.WAITING
             self.tank = None # remove reference, let garbage collector do its job
         else:
-            # else process inputs
+            # process inputs
             # TODO: bound this, this shouldn't be a while
             while self.poll():
                 packet = self.get()

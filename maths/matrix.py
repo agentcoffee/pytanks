@@ -2,6 +2,8 @@ import math
 
 from maths.vector import Vector
 
+# [ a b ]
+# [ c d ]
 
 class Matrix:
     def __init__(self, a, b, c, d):

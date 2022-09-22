@@ -24,5 +24,5 @@ class Collidable:
             return False
 
     # Callback on an actual collision
-    def collision(self, other, sprites):
+    def collision(self, other):
         print("Movable:" + str(self) + " collides with " + str(other))

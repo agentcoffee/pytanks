@@ -15,6 +15,9 @@ from sprites.explosion import ExplosionObject, ExplosionState
 
 from packets import InputPacket
 
+# TODO THIS SHOULD BE SPLIT INTO THE STATE OF MOVABLE AND THE STATE FOR THE
+# TANK ITSELF
+
 # Used to communicate the state to the clients
 class TankState:
     def __init__(self, position, angle, speed, health, name, uid):
@@ -142,7 +145,7 @@ class TankObject(Movable, Collidable, TankState):
 
         if isinstance(other, FieldObject):
             # TODO
-            #self.position
+            self.position = 
             pass
 
     def step(self, objects):
