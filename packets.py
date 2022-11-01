@@ -32,8 +32,8 @@ class JoinReqPacket:
         self.client_type = client_type
 
 class JoinAckPacket:
-    def __init__(self, field):
-        self.field = field
+    def __init__(self):
+        pass
 
 class CreateTankPacket:
     def __init__(self, tank_name):

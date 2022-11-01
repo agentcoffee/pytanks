@@ -8,10 +8,11 @@ from maths.matrix import RotationMatrix
 from maths.interval import Interval
 
 from sprites.drawable import Drawable
-from sprites.collidable import Collidable
+from sprites.collidable import Collidable, CollidableType
 from sprites.explosion import ExplosionObject, ExplosionState
 
-from packets import InputPacket
+from engine.bounding_box import BoundingBox
+
 
 # Used to communicate the state to the clients
 class FieldState:
@@ -24,10 +25,10 @@ class FieldState:
         self.height = height
         self.uid    = uid
 
-    def getState(self):
+    def get_state(self):
         return FieldState(self.width, self.height, self.uid)
 
-    def setState(self, field_state):
+    def set_state(self, field_state):
         assert(type(field_state) == FieldState)
         self.x_inf  = field_state.x_inf
         self.x_sup  = field_state.x_sup
@@ -37,26 +38,22 @@ class FieldState:
         self.height = field_state.height
         self.uid    = field_state.uid
 
-class FieldSprite(Drawable, FieldState):
+class FieldSprite(Drawable):
     def __init__(self, screen, window, gc, field_state):
         # Init the drawable context
         Drawable.__init__(self, screen, window, gc)
 
         # Init the state
-        TankState.setState(self, field_state)
+        self.state = field_state
 
-        self.image = [Vector(5, -5),  Vector(-5, -5), Vector(-5, 5),
-                      Vector(5, 5),   Vector(5, 1),   Vector(10, 1),
-                      Vector(10, -1), Vector(5, -1),  Vector(5, -5)]
-
-        debug.objects("Instantiated TankSprite {}".format(self.name, self.position.x, self.position.y))
+        debug.objects(f"Instantiated Field {self.state.width} x {self.state.height}")
 
     def __str__(self):
-        return "TankSprite: " + str(self.uid)
+        return "FieldSprite: " + str(self.state.uid)
 
     def draw_field(self, fg_border, fg_font):
         self.gc.change(foreground = fg_border)
-        self.window.rectangle(self.gc, 0, 0, int(self.width), int(self.height))
+        self.window.rectangle(self.gc, 0, 0, int(self.state.width), int(self.state.height))
 
     def draw(self):
         self.draw_field(self.screen.black_pixel, self.red)
@@ -64,17 +61,18 @@ class FieldSprite(Drawable, FieldState):
     def erase(self):
         self.draw_field(self.screen.white_pixel, self.screen.white_pixel)
 
-class FieldObject(Collidable, FieldState):
+class FieldObject(Collidable):
     def __init__(self, field_state, id_generator):
         # Init the state
-        FieldState.setState(self, field_state)
+        self.state = field_state
+        self.id_generator = id_generator
 
-        self.id_generator   = id_generator
+        Collidable.__init__(self, CollidableType.SQUARE)
 
-        print(f"Instantiated Field {self.id} : x = {self.width} y = {self.height}")
+        print(f"Instantiated Field {self.state.uid} : x = {self.state.width} y = {self.state.height}")
 
     def __str__(self):
-        return "Field: " + str(self.uid)
+        return "Field: " + str(self.state.uid)
 
     def handler(self, e):
         pass
@@ -86,8 +84,7 @@ class FieldObject(Collidable, FieldState):
         raise NotImplementedError(f"Called get_hitboxradius on Field {self.id}")
 
     def get_collisionbox(self):
-        return = (Interval(self.x_inf, self.x_sup, inverted = True),
-                  Interval(self.y_inf, self.y_sup, inverted = True))
+        return BoundingBox(Interval(1, self.state.width, True), Interval(1, self.state.height, True))
 
     def collision(self, other):
         pass

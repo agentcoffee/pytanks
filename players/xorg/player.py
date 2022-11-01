@@ -7,10 +7,13 @@ from enum import Enum
 from maths.vector import Vector
 from maths.matrix import Matrix
 from maths.matrix import RotationMatrix
+
 from sprites.movable import Movable
 from sprites.tank import TankSprite, TankState
 from sprites.projectile import ProjectileSprite, ProjectileState
 from sprites.explosion import ExplosionSprite, ExplosionState
+from sprites.field import FieldSprite, FieldState
+
 from clients.type_enum import ClientType
 
 import debug
@@ -33,20 +36,21 @@ class Player:
         # X11 init
         self.display        = display
         self.tank_name      = tank_name
+
+        self.field          = (100, 100)
  
         print("Sent Initial JoinReq, Listening ...")
         self.connection.put( JoinReqPacket(ClientType.TANK) )
 
         packet = self.connection.blocking_get()
 
-        if type(packet) == JoinAckPacket:
-            self.field = packet.field
-        else:
+        if type(packet) != JoinAckPacket:
             raise Exception("Expected JoinAck, got {}".format(type(packet)))
 
         self.screen = self.display.screen()
+        # TODO do some cool splash intro here
         self.window = self.screen.root.create_window(
-            10, 10, self.field.width, self.field.height, 1,
+            10, 10, self.field[0], self.field[1], 1,
             self.screen.root_depth,
             background_pixel=self.screen.white_pixel,
             event_mask=X.ExposureMask | X.KeyPressMask | X.KeyReleaseMask,
@@ -149,7 +153,7 @@ class Player:
                         for state in states_list:
                             if state.uid in objects:
                                 objects[state.uid].erase()
-                                objects[state.uid].setState(state)
+                                objects[state.uid].state.set_state(state)
                             else:
                                 if   type(state) is TankState:
                                     objects[state.uid] = TankSprite(
@@ -159,6 +163,14 @@ class Player:
                                         self.screen, self.window, self.gc, state)
                                 elif type(state) is ExplosionState:
                                     objects[state.uid] = ExplosionSprite(
+                                        self.screen, self.window, self.gc, state)
+                                elif type(state) is FieldState:
+                                    if state.width != self.field[0] or state.height != self.field[1]:
+                                        self.window.configure(width=state.width, height=state.height)
+                                        self.field = (state.width, state.height)
+                                        self.display.sync()
+
+                                    objects[state.uid] = FieldSprite(
                                         self.screen, self.window, self.gc, state)
                                 else:
                                     raise NotImplementedError(type(state))
@@ -192,7 +204,7 @@ class Player:
             # draw game border
             self.gc.change(foreground = self.screen.black_pixel)
             self.window.rectangle(self.gc, 0, 0,
-                    int(self.field.width), int(self.field.height))
+                    int(self.field[0]), int(self.field[1]))
             
             # Then X11 events
             for e in self.autoRepeatDetection():

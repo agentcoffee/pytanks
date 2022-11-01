@@ -9,6 +9,8 @@ from enum import Enum
 from packets import *
 from maths.vector import Vector
 from sprites.tank import TankObject, TankState
+from sprites.field import FieldObject
+from sprites.movable import MovableState
 from clients.state_enum import ClientState
 
 class TankClient:
@@ -25,7 +27,7 @@ class TankClient:
         else:
             return [ ]
 
-    def step(self, field=None, id_generator=None, cmd_id_list=None):
+    def step(self, id_generator=None, cmd_id_list=None, objects=None):
         """
         Function to advance the client through its state machine. After any
         invocation the function returns the clients current state. The states
@@ -43,7 +45,7 @@ class TankClient:
         """
 
         if self.state is ClientState.WAITING:
-            self.state_waiting(field, id_generator)
+            self.state_waiting(id_generator, objects)
 
         elif self.state is ClientState.READY:
             self.state_ready(cmd_id_list)
@@ -51,7 +53,7 @@ class TankClient:
         elif self.state is ClientState.DEAD:
             self.state_dead()
 
-    def state_waiting(self, field, id_generator):
+    def state_waiting(self, id_generator, objects):
         """
         Function to step through initial handshake of this client. This
         function is called by the server class until it returns CLIENT_READY,
@@ -62,23 +64,30 @@ class TankClient:
             packet = self.get()
 
             if type(packet) is CreateTankPacket:
+                field = None
+                for o in objects:
+                    if isinstance(o, FieldObject):
+                        field = o.get_collisionbox()
+                        break
+                assert field is not None
+
                 self.name = packet.tank_name
                 self.tank = TankObject(
-                                field = field,
                                 tank_state = TankState(
-                                    position = Vector(
-                                        x = field.x_inf +
-                                            random.random() * (field.x_sup - field.x_inf + 1),
-                                        y = field.y_inf +
-                                            random.random() * (field.y_sup - field.y_inf + 1)),
-                                    angle = math.pi/2,
-                                    speed = 0,
+                                    MovableState(
+                                        position = Vector(
+                                            x = field.xrange.a +
+                                                random.random() * (field.xrange.b - field.xrange.a + 1),
+                                            y = field.yrange.a +
+                                                random.random() * (field.yrange.b - field.yrange.a + 1)),
+                                        angle = math.pi/2,
+                                        speed = 0),
                                     health = 100,
                                     name = self.name,
                                     uid = id_generator.get()),
                                 id_generator = id_generator)
 
-                self.put(TankAckPacket(self.tank.uid))
+                self.put(TankAckPacket(self.tank.state.uid))
                 self.state = ClientState.READY
                 print("Client {} moves to READY".format(self.name))
 
@@ -96,7 +105,7 @@ class TankClient:
         """
 
         # check if the tank died
-        if self.tank.health <= 0:
+        if self.tank.state.health <= 0:
             self.put(TankDiedPacket(self.tank.uid))
             self.state = ClientState.WAITING
             self.tank = None # remove reference, let garbage collector do its job

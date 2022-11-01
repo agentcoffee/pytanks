@@ -11,6 +11,12 @@ class Interval:
         else:
             return "(R \ [" + str(self.a) + " " + str(self.b) + "])"
 
+    def __contains__(self, x):
+        if self.inverted:
+            return ( x <= self.a or self.b <= x )
+        else:
+            return ( self.a <= x <= self.b)
+
     def overlaps(self, other):
         if isinstance(other, Interval):
             if not self.inverted and not other.inverted:
@@ -19,14 +25,16 @@ class Interval:
                     return False
             elif not self.inverted and other.inverted:
                 # [a b] and x] [y
-                if other.x < self.a and self.b < other.y:
+                if other.a < self.a and self.b < other.b:
                     return False
             elif self.inverted and not other.inverted:
                 # a] [b and [x y]
-                if self.a < other.x and other.y < self.b:
+                if self.a < other.a and other.b < self.b:
                     return False
             else: # self.inverted and other.inverted:
                 # a] [b and x] [y
                 pass
 
             return True
+        else:
+            raise NotImplementedError(f"Cannot overlap Interval and {other}")

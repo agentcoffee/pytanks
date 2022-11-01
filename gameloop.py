@@ -10,6 +10,7 @@ from sprites.collidable import Collidable
 
 from maths.vector import Vector
 from sprites.tank import TankObject, TankState
+from sprites.field import FieldObject, FieldState
 
 from unique_id import UniqueID
 
@@ -80,41 +81,9 @@ class CollisionEngine:
     def run(self, objects):
         return self.split_x(objects, self.field.x_inf, self.field.x_sup)
 
-# The Field class is interpreted as:
-#
-#       x_inf   x_sup
-#  y_inf  0------>
-#         |
-#         |
-#  y_sup  v
-#
-
-class Field(Collidable):
-    def __init__(self, width, height):
-        self.x_inf  = 1
-        self.x_sup  = width
-        self.y_inf  = 1
-        self.y_sup  = height
-        self.width  = width
-        self.height = height
-        self.collisionbox = (Interval(self.x_inf, self.x_sup,
-                                      inverted = True),
-                             Interval(self.y_inf, self.y_sup,
-                                      inverted = True))
-
-    def get_collisionbox(self):
-        return self.collisionbox
-
-    def get_hitboxradius(self):
-        raise NotImplementedError("The field has no hitbox.")
-
-    def get_position(self):
-        raise NotImplementedError("The field has no position.")
-
 class GameLoop:
-    def __init__(self, io_server, field):
+    def __init__(self, io_server):
         self.io_server      = io_server
-        self.field          = field
         self.id_generator   = UniqueID()
 
     def loop(self):
@@ -132,7 +101,7 @@ class GameLoop:
             Thats any tank, any projectile and also texts, for example.
         """
         clients = []
-        objects = []
+        objects = [ FieldObject(FieldState(400, 400, self.id_generator.get()), self.id_generator) ]
 
         # dummy tank
 #        objects += [ TankObject(
@@ -155,7 +124,7 @@ class GameLoop:
         __idle_total = 0
         __run_start  = (time.monotonic_ns() / 1000000)
 
-        self.collisions = CollisionEngine(self.field)
+        #self.collisions = CollisionEngine(self.field)
 
         cmd_id_list = []
 
@@ -168,9 +137,9 @@ class GameLoop:
                 # Blast the game state back
                 object_states = []
                 for c in clients:
-                    object_states += [ o.getState() for o in c.get_movables() ]
+                    object_states += [ o.state.get_state() for o in c.get_movables() ]
 
-                object_states += [ o.getState() for o in objects ]
+                object_states += [ o.state.get_state() for o in objects ]
 
                 game_state = StatePacket(__round_number, object_states, cmd_id_list)
                 for c in [ c for c in clients if c.state is ClientState.READY ]:
@@ -185,7 +154,7 @@ class GameLoop:
 
                 # Advance the client state machine. Add a Tank, process inputs, etc.
                 for c in clients:
-                    c.step(self.field, self.id_generator, cmd_id_list)
+                    c.step(self.id_generator, cmd_id_list, objects)
 
                 # Sort out dead clients
                 clients = [ c for c in clients if c.state is not ClientState.DEAD ]
@@ -201,17 +170,17 @@ class GameLoop:
 
                 # Collision detection and notify involved objects
                 # TODO: not very performant
-                collidables  = [ o for o in objects if isinstance(o, Collidable) ]
-                for c in clients:
-                    for m in c.get_movables():
-                        collidables += [ m ]
-
-                for c in self.collisions.run(collidables):
-                    c[0].collision(c[1])
-                    c[1].collision(c[0])
+#                collidables  = [ o for o in objects if isinstance(o, Collidable) ]
+#                for c in clients:
+#                    for m in c.get_movables():
+#                        collidables += [ m ]
+#
+#                for c in self.collisions.run(collidables):
+#                    c[0].collision(c[1])
+#                    c[1].collision(c[0])
 
                 # check if somebody wants to join
-                new_clients = self.io_server.step(self.field)
+                new_clients = self.io_server.step()
                 clients    += new_clients
 
                 # Ez debugging

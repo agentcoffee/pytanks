@@ -31,7 +31,7 @@ class TCPServer:
 
         return telegram
 
-    def step(self, field):
+    def step(self):
         # Check for new clients
         try:
             self.pending_clients.append(self.accept())
@@ -49,12 +49,12 @@ class TCPServer:
 
                     if packet.client_type is ClientType.TANK:
                         client = TankClient(c)
-                        client.put(JoinAckPacket(field))
+                        client.put(JoinAckPacket())
                         return [ client ]
 
                     elif packet.client_type is ClientType.OBSERVER:
                         client = ObserverClient(c)
-                        client.put(JoinAckPacket(field))
+                        client.put(JoinAckPacket())
                         return [ client ]
                     
                     else:

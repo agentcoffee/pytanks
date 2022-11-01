@@ -4,7 +4,7 @@ from pycallgraph3.output import GraphvizOutput
 
 import argparse
 
-from gameloop import GameLoop, Field
+from gameloop import GameLoop
 from drivers.tcp_driver import TCPServer
 
 def start_server():
@@ -17,15 +17,13 @@ def start_server():
 
     print("IP: " + str(args.ip) + " : " + str(args.port))
 
-    field   = Field(400, 400)
-
     graphviz = GraphvizOutput()
     graphviz.output_file = 'cg_window_server.png'
 
     with PyCallGraph(output=graphviz):
-        GameLoop(TCPServer(args.ip, args.port), field).loop()
+        GameLoop(TCPServer(args.ip, args.port)).loop()
 
-    #GameLoop(TCPServer(args.ip, args.port), field).loop()
+    #GameLoop(TCPServer(args.ip, args.port)).loop()
 
 if __name__ == "__main__":
     start_server()
