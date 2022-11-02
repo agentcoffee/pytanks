@@ -50,5 +50,5 @@ class Vector:
         return Vector(int(self.x), int(self.y))
 
     def normalize(self):
-        l = len(self)
+        l = self.length()
         return Vector(self.x/l, self.y/l)

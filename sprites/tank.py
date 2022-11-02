@@ -99,7 +99,7 @@ class TankObject(Movable):
                 .format(self.state.name, self.state.position.x, self.state.position.y))
 
     def __str__(self):
-        return "Tank: " + str(self.state.uid)
+        return f"Tank: {self.state.name} ({str(self.state.uid)})"
 
     def handler(self, e):
         if e.event == InputPacket.Event.PRESS:
@@ -140,15 +140,18 @@ class TankObject(Movable):
         if isinstance(other, FieldObject):
             return True
 
-    def step(self, objects):
-        self.update(objects)
+        if isinstance(other, TankObject):
+            return True
+
+    def step(self, objects, movables):
+        self.update(objects, movables)
 
         if self.shoot == True:
             self.shoot = False
             #a = self.angle - 0.5
             #while a < self.angle + 0.5:
             #    start      = self.state.position + RotationMatrix(a) * Vector(20, 0)
-            start      = self.state.position + RotationMatrix(self.state.angle) * Vector(20, 0)
+            start      = self.state.position + RotationMatrix(self.state.angle) * Vector(15, 0)
             objects.append(ProjectileObject(
                 projectile_state = ProjectileState(
                     MovableState(

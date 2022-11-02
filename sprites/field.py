@@ -89,5 +89,5 @@ class FieldObject(Collidable):
     def collision(self, other):
         pass
 
-    def step(self, objects):
+    def step(self, objects, movables):
         pass

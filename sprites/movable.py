@@ -52,7 +52,7 @@ class Movable(Collidable):
         return "pos: " + str(self.state.position) + \
                " speed: " + str(self.state.speed)
 
-    def update(self, objects):
+    def update(self, objects, movables):
         t = ((time.monotonic_ns() / 1000000) - self.timestamp)
         self.timestamp = time.monotonic_ns() / 1000000
 
@@ -90,7 +90,7 @@ class Movable(Collidable):
         opponent        = None
         collided        = False
 
-        for o in objects:
+        for o in objects + movables:
             # Obviously we collide with ourselves
             if o is not self and isinstance(o, Collidable):
                 # Coarse check if we collide
@@ -104,19 +104,34 @@ class Movable(Collidable):
 
                         # ( Opponent Position - Old Position ) * d / (d * d)
                         # Note: Since d is normalized, we can simplify
-                        # Calculate the factor x on the trajectory where the
+                        # Calculate the factor s on the trajectory where the
                         # opponent is the closest, i.e., the normal vector on the
                         # trajectory through the opponent.
-                        x = ((o.get_position() - old_position) * direction ) #/ (direction * direction)
+                        s = ((o.get_position() - old_position) * direction ) #/ (direction * direction)
 
-                        # Q is the normal point of the opponent position on the trajectory.
-                        Q = old_position + (x * direction)
-                        # l is the distance of the opponent position to Q.
-                        l = (Q - o.get_position()).length()
-                        # Calculate the factor x on the trajectory where we would hit the opponent.
-                        x = math.sqrt((o.get_hitboxradius() + self.get_hitboxradius())**2 - l**2)
-
-                        collided = True
+                        if s > 0:
+                            # Q is the normal point of the opponent position on the trajectory.
+                            Q = old_position + (s * direction)
+                            # l is the distance of the opponent position to Q.
+                            l = (Q - o.get_position()).length()
+                            if o.get_hitboxradius() + self.get_hitboxradius() > l:
+                                print(f"{self} possibly colliding with {o}")
+                                print(f"Trajectory: P {old_position} d {direction} Q {o.get_position()}")
+                                # We collide, calculate the factor x on the
+                                # trajectory where we would hit the opponent.
+                                u = (old_position - Q).length() -\
+                                        math.sqrt((o.get_hitboxradius() + self.get_hitboxradius())**2 - l**2)
+                                if u < x:
+                                    print(f"We collide: {l} < {o.get_hitboxradius()} + {self.get_hitboxradius()}")
+                                    print(f"u {u} Q {Q}")
+                                    x = u
+                                    collided = True
+                                else:
+                                    print(f"Not in range.")
+                                    pass
+                            else:
+                                print(f"Not in range.")
+                                pass
 
                     # Or we collide with a square
                     elif self.get_collidabletype() == CollidableType.CIRCLE and\
@@ -170,7 +185,7 @@ class Movable(Collidable):
         if collided and first_collision is not None:
             opponent.collision(self)
             if self.collision(opponent):
-                print(f"correcting position from {self.state.position} to {old_position + x * direction}")
+                #print(f"correcting position from {self.state.position} to {old_position + x * direction}")
                 self.state.position = old_position + x * direction
 
     def rotate(self, v, d):

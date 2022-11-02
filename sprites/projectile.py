@@ -77,7 +77,7 @@ class ProjectileObject(Movable):
                 .format(self.state.position.x, self.state.position.y))
 
     def __str__(self):
-        return "Projectile: " + self.uid
+        return f"Projectile: ({str(self.state.uid)})"
 
     def get_position(self):
         return self.state.position
@@ -97,9 +97,9 @@ class ProjectileObject(Movable):
             self.explode = True
             return True
 
-    def step(self, objects):
+    def step(self, objects, movables):
         remove = False
-        self.update(objects)
+        self.update(objects, movables)
 
         if self.explode == True:
             objects.append(ExplosionObject(

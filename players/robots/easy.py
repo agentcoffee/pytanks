@@ -134,9 +134,7 @@ class EasyRobot:
 
         packet = self.connection.blocking_get()
 
-        if type(packet) == JoinAckPacket:
-            self.field = packet.field
-        else:
+        if type(packet) != JoinAckPacket:
             raise Exception("Expected JoinAck, got {}".format(type(packet)))
 
     def loop(self):
@@ -263,7 +261,7 @@ class EasyRobot:
                 angle_diff =  (2*math.pi + angle_diff)
 
             if -0.1 < angle_diff < 0.1:
-                if (time.time() - self.shoot_timeout) > 5:
+                if (time.time() - self.shoot_timeout) > 10:
                     self.shoot_timeout = time.time()
                     commands.shoot()
             elif angle_diff > 0:

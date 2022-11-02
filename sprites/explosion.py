@@ -56,7 +56,7 @@ class ExplosionObject:
     def collision(self, other):
         return False
 
-    def step(self, objects):
+    def step(self, objects, movables):
         t = time.monotonic_ns() / 1000000
         if t - self.timestamp > EXPANSION_TIME:
             self.timestamp = time.monotonic_ns() / 1000000

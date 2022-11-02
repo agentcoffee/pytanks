@@ -158,15 +158,16 @@ class GameLoop:
 
                 # Sort out dead clients
                 clients = [ c for c in clients if c.state is not ClientState.DEAD ]
+                # Get a list of movables
+                movables = [ m for c in clients for m in c.get_movables() ]
 
                 # Step all the movables connected to clients
-                for c in clients:
-                    for m in c.get_movables():
-                        m.step(objects)
+                for m in movables:
+                    m.step(objects, movables)
 
                 # Step all the objects, the movables might have appended some
                 for o in objects:
-                    o.step(objects)
+                    o.step(objects, movables)
 
                 # Collision detection and notify involved objects
                 # TODO: not very performant

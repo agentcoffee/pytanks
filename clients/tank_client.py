@@ -106,7 +106,7 @@ class TankClient:
 
         # check if the tank died
         if self.tank.state.health <= 0:
-            self.put(TankDiedPacket(self.tank.uid))
+            self.put(TankDiedPacket(self.tank.state.uid))
             self.state = ClientState.WAITING
             self.tank = None # remove reference, let garbage collector do its job
         else:
