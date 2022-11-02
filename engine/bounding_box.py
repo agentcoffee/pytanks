@@ -42,3 +42,10 @@ class BoundingBox:
 
     def y_overlaps(self, other):
         return self.yrange.overlaps(other.yrange)
+
+    def __contains__(self, v):
+        if isinstance(v, Vector):
+            return ( v.x in self.xrange and v.y in self.yrange )
+
+    def __str__(self):
+        return f"BoundingBox x {self.xrange} y {self.yrange}"

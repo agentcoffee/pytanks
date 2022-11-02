@@ -115,22 +115,22 @@ class Movable(Collidable):
                             # l is the distance of the opponent position to Q.
                             l = (Q - o.get_position()).length()
                             if o.get_hitboxradius() + self.get_hitboxradius() > l:
-                                print(f"{self} possibly colliding with {o}")
-                                print(f"Trajectory: P {old_position} d {direction} Q {o.get_position()}")
+                                #print(f"{self} possibly colliding with {o}")
+                                #print(f"Trajectory: P {old_position} d {direction} Q {o.get_position()}")
                                 # We collide, calculate the factor x on the
                                 # trajectory where we would hit the opponent.
                                 u = (old_position - Q).length() -\
                                         math.sqrt((o.get_hitboxradius() + self.get_hitboxradius())**2 - l**2)
                                 if u < x:
-                                    print(f"We collide: {l} < {o.get_hitboxradius()} + {self.get_hitboxradius()}")
-                                    print(f"u {u} Q {Q}")
+                                    #print(f"We collide: {l} < {o.get_hitboxradius()} + {self.get_hitboxradius()}")
+                                    #print(f"u {u} Q {Q}")
                                     x = u
                                     collided = True
                                 else:
-                                    print(f"Not in range.")
+                                    #print(f"Not in range.")
                                     pass
                             else:
-                                print(f"Not in range.")
+                                #print(f"Not in range.")
                                 pass
 
                     # Or we collide with a square
@@ -170,6 +170,11 @@ class Movable(Collidable):
                                 raise NotImplementedError("Not yet implemented.")
                             collided = True
 
+                        if collided:
+                            print(f"{self} colliding with {o}")
+                            print((f"Trajectory: P {old_position} d {direction}\n"
+                                   f"  to {self.state.position}"))
+                            print(f"  fixing to {old_position + x * direction}")
                     else:
                         raise NotImplementedError(("A SQUARE collidable"
                                 "shouldn't be movable, and two SQUARE's"
