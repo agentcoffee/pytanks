@@ -13,7 +13,7 @@ class Interval:
 
     def __contains__(self, x):
         if self.inverted:
-            return ( x <= self.a or self.b <= x )
+            return not ( self.a < x < self.b )
         else:
             return ( self.a <= x <= self.b)
 

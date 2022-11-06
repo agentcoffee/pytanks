@@ -49,6 +49,17 @@ class TankSprite(Drawable):
                       Vector(5, 5),   Vector(5, 1),   Vector(10, 1),
                       Vector(10, -1), Vector(5, -1),  Vector(5, -5)]
 
+        tracks = [Vector(0, 0), Vector(0, 1), Vector(1, 0), Vector(1, 1)]
+        self.tracks_1  = [v + Vector(-4, 0) for v in tracks]
+        self.tracks_1 += [v + Vector(-1, 0) for v in tracks]
+        self.tracks_1 += [v + Vector(+3, 0) for v in tracks]
+
+        self.tracks_2  = [v + Vector(-2, 0) for v in tracks]
+        self.tracks_2 += [v + Vector(+1, 0) for v in tracks]
+
+        self.track_animation_frames = 20
+        self.track_animation_frames_count = self.track_animation_frames
+
         debug.objects("Instantiated TankSprite {}"
                 .format(self.state.name, self.state.position.x, self.state.position.y))
 
@@ -57,10 +68,35 @@ class TankSprite(Drawable):
 
     def drawTank(self, fg_tank, fg_font):
         self.gc.change(foreground = fg_tank)
-        placed_image = [self.state.position + RotationMatrix(self.state.angle) * dot for dot in self.image]
+
+        placed_tank = [self.state.position + RotationMatrix(self.state.angle) * dot\
+                        for dot in self.image]
+
+        if self.track_animation_frames_count > 0:
+            placed_tracks  = [self.state.position +\
+                    RotationMatrix(self.state.angle) * (dot + Vector(0, 3))\
+                    for dot in self.tracks_1]
+            placed_tracks += [self.state.position +\
+                    RotationMatrix(self.state.angle) * (dot + Vector(0, -4))\
+                    for dot in self.tracks_2]
+        else:
+            placed_tracks  = [self.state.position +\
+                    RotationMatrix(self.state.angle) * (dot + Vector(0, -4))\
+                    for dot in self.tracks_1]
+            placed_tracks += [self.state.position +\
+                    RotationMatrix(self.state.angle) * (dot + Vector(0, 3))\
+                    for dot in self.tracks_2]
+
+        if self.state.speed > 0:
+            self.track_animation_frames_count -= 1
+            if self.track_animation_frames_count == -self.track_animation_frames:
+                self.track_animation_frames_count = self.track_animation_frames
 
         self.window.poly_line(self.gc, X.CoordModeOrigin,
-                [(int(dot.x), int(dot.y)) for dot in placed_image])
+                [(int(dot.x), int(dot.y)) for dot in placed_tank])
+
+        for p in placed_tracks:
+            self.window.point(self.gc, int(p.x), int(p.y))
 
         #self.window.poly_line(self.gc, X.CoordModeOrigin,
         #        [(0, 0), (int(self.state.position.x), int(self.state.position.y))])

@@ -11,6 +11,7 @@ from sprites.collidable import Collidable
 from maths.vector import Vector
 from sprites.tank import TankObject, TankState
 from sprites.field import FieldObject, FieldState
+from sprites.movable import MovableState
 
 from unique_id import UniqueID
 
@@ -104,20 +105,18 @@ class GameLoop:
         objects = [ FieldObject(FieldState(400, 400, self.id_generator.get()), self.id_generator) ]
 
         # dummy tank
-#        objects += [ TankObject(
-#                        field = self.field,
-#                        tank_state = TankState(
-#                            position = Vector(
-#                                x = self.field.x_inf +
-#                                    random.random() * (self.field.x_sup - self.field.x_inf + 1),
-#                                y = self.field.y_inf +
-#                                    random.random() * (self.field.y_sup - self.field.y_inf + 1)),
-#                            angle = math.pi/2,
-#                            speed = 0,
-#                            health = 100,
-#                            name = "Dummy1",
-#                            uid = self.id_generator.get()),
-#                        id_generator = self.id_generator) ]
+        objects += [ TankObject(
+                        tank_state = TankState(
+                            MovableState(
+                                position = Vector(
+                                    x = 200,
+                                    y = 200),
+                                angle = math.pi/2,
+                                speed = 0),
+                            health = 100,
+                            name = "Dummy",
+                            uid = self.id_generator.get()),
+                        id_generator = self.id_generator) ]
 
         # Diagnostic variables
         __round_number = 0
@@ -135,10 +134,7 @@ class GameLoop:
                 __run_total = __t - __run_start
 
                 # Blast the game state back
-                object_states = []
-                for c in clients:
-                    object_states += [ o.state.get_state() for o in c.get_movables() ]
-
+                object_states  = [ o.state.get_state() for c in clients for o in c.get_movables() ]
                 object_states += [ o.state.get_state() for o in objects ]
 
                 game_state = StatePacket(__round_number, object_states, cmd_id_list)

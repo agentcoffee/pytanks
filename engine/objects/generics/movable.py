@@ -8,6 +8,7 @@ from maths.interval import Interval
 
 from sprites.drawable import Drawable
 from sprites.collidable import Collidable, CollidableType
+from sprites.field import FieldObject
 
 from engine.bounding_box import BoundingBox
 
@@ -53,6 +54,14 @@ class Movable(Collidable):
                " speed: " + str(self.state.speed)
 
     def update(self, objects, movables):
+        field = None
+        for o in objects:
+            if isinstance(o, FieldObject):
+                field = o
+                break
+        if self.state.position in field.get_collisionbox():
+            raise RuntimeError(f"\n{self} is not in the field: {self.state.position}\n")
+
         t = ((time.monotonic_ns() / 1000000) - self.timestamp)
         self.timestamp = time.monotonic_ns() / 1000000
 
@@ -90,7 +99,7 @@ class Movable(Collidable):
         opponent        = None
         collided        = False
 
-        for o in objects + movables:
+        for o in [ *objects, *movables ]:
             # Obviously we collide with ourselves
             if o is not self and isinstance(o, Collidable):
                 # Coarse check if we collide
@@ -171,10 +180,19 @@ class Movable(Collidable):
                             collided = True
 
                         if collided:
-                            print(f"{self} colliding with {o}")
-                            print((f"Trajectory: P {old_position} d {direction}\n"
-                                   f"  to {self.state.position}"))
-                            print(f"  fixing to {old_position + x * direction}")
+                            #print(f"{self} colliding with {o}")
+                            #print((f"Trajectory: P {old_position} d {direction}\n"
+                            #       f"  to {self.state.position}"))
+                            #print(f"  fixing to {old_position + x * direction}")
+
+                            field = None
+                            for o in objects:
+                                if isinstance(o, FieldObject):
+                                    field = o
+                                    break
+                            if old_position in field.get_collisionbox():
+                                raise RuntimeError((f"\n{self} is still"
+                                    f"not in the field: {self.state.position}\n"))
                     else:
                         raise NotImplementedError(("A SQUARE collidable"
                                 "shouldn't be movable, and two SQUARE's"
@@ -190,8 +208,8 @@ class Movable(Collidable):
         if collided and first_collision is not None:
             opponent.collision(self)
             if self.collision(opponent):
-                #print(f"correcting position from {self.state.position} to {old_position + x * direction}")
-                self.state.position = old_position + x * direction
+                #print(f"correcting position from {self.state.position} to {old_position + first_collision * direction}")
+                self.state.position = old_position + first_collision * direction
 
     def rotate(self, v, d):
         self.turn         = v
