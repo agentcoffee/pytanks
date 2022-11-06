@@ -1,5 +1,7 @@
 import socket
 
+import logging
+
 class Telegram:
     def __init__(self, connection):
         assert(type(connection) is socket.socket)

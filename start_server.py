@@ -17,12 +17,11 @@ def start_server():
 
     args = parser.parse_args()
 
+    logging.basicConfig(level=logging.INFO, format="[%(levelname)-8s] %(message)s")
     logging.info("IP: " + str(args.ip) + " : " + str(args.port))
 
     graphviz = GraphvizOutput()
     graphviz.output_file = 'cg_window_server.png'
-
-    logging.basicConfig(level=logging.INFO, format="[%(levelname)-8s] %(message)s")
 
     with PyCallGraph(output=graphviz):
         GameLoop(TCPServer(args.ip, args.port)).loop()

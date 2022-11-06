@@ -32,6 +32,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    logging.basicConfig(level=logging.INFO, format="[%(levelname)-8s] %(message)s")
     logging.info("IP: " + str(args.ip) + " : " + str(args.port) + " / " + args.name)
 
     fd = sys.stdin.fileno()
@@ -48,8 +49,6 @@ if __name__ == "__main__":
 
         #with PyCallGraph(output=graphviz):
         #    Window(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
-
-        logging.basicConfig(level=logging.INFO, format="[%(levelname)-8s] %(message)s")
 
         Player(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
 

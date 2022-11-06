@@ -165,17 +165,6 @@ class GameLoop:
                 for o in objects:
                     o.step(objects, movables)
 
-                # Collision detection and notify involved objects
-                # TODO: not very performant
-#                collidables  = [ o for o in objects if isinstance(o, Collidable) ]
-#                for c in clients:
-#                    for m in c.get_movables():
-#                        collidables += [ m ]
-#
-#                for c in self.collisions.run(collidables):
-#                    c[0].collision(c[1])
-#                    c[1].collision(c[0])
-
                 # check if somebody wants to join
                 new_clients = self.io_server.step()
                 clients    += new_clients

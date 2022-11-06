@@ -1,3 +1,5 @@
+#import logging
+
 import socket
 import pickle
 
@@ -7,8 +9,6 @@ from server.clients.obs_client  import ObserverClient
 from server.telegram import Telegram
 
 from server.packets import *
-
-import logging
 
 class TCPServer:
     def __init__(self, ip, port):
@@ -20,8 +20,8 @@ class TCPServer:
         self.socket.setblocking(False)
         self.pending_clients = []
 
-        logging.info("Socket bound to " + ip + ":" + str(port))
-        logging.info("TCPServer: Connected")
+        #logging.info("Socket bound to " + ip + ":" + str(port))
+        #logging.info("TCPServer: Connected")
 
     def accept(self):
         """
@@ -29,7 +29,7 @@ class TCPServer:
         """
         tcp_socket, addr = self.socket.accept()
         telegram         = Telegram(tcp_socket)
-        logging.info("Accepted connection")
+        #logging.info("Accepted connection")
 
         return telegram
 
@@ -66,7 +66,7 @@ class TCPServer:
         return []
 
     def close(self):
-        logging.info("Cleaning clients")
+        #logging.info("Cleaning clients")
         self.socket.close()
 
 class TCPConnection:
@@ -76,7 +76,7 @@ class TCPConnection:
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
         self.socket.connect( (ip, port) )
 
-        logging.info("TCPConnection: Connected")
+        #logging.info("TCPConnection: Connected")
         self.telegram = Telegram(self.socket)
 
     def poll(self):
@@ -95,5 +95,5 @@ class TCPConnection:
         return pickle.loads(self.telegram.get_latest())
 
     def close(self):
-        logging.info("Cleaning server connection")
+        #logging.info("Cleaning server connection")
         self.telegram.close()

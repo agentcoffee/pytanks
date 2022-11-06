@@ -199,12 +199,6 @@ class Player:
                 logging.info("Disconnecting from the server")
                 self.connection.put( LeavePacket(self.tank_uid) )
                 return
-
-            # TODO erase after testing, should not be needed anymore
-            # draw game border
-            self.gc.change(foreground = self.screen.black_pixel)
-            self.window.rectangle(self.gc, 0, 0,
-                    int(self.field[0]), int(self.field[1]))
             
             # Then X11 events
             for e in self.autoRepeatDetection():
