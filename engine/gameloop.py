@@ -11,6 +11,7 @@ from engine.objects.generics.collidable import Collidable
 from engine.maths.vector import Vector
 from engine.objects.sprites.tank import TankObject, TankState
 from engine.objects.sprites.field import FieldObject, FieldState
+from engine.objects.sprites.leaderboard import LeaderboardObject, LeaderboardState
 from engine.objects.generics.movable import MovableState
 
 from engine.unique_id import UniqueID
@@ -101,22 +102,24 @@ class GameLoop:
         @objects are all objects which want to be placed on the gamefield.
             Thats any tank, any projectile and also texts, for example.
         """
-        clients = []
-        objects = [ FieldObject(FieldState(400, 400, self.id_generator.get()), self.id_generator) ]
+        clients  = []
+        objects  = [ FieldObject(FieldState(400, 400, self.id_generator.get()), self.id_generator) ]
+        objects += [ LeaderboardObject(LeaderboardState(self.id_generator.get()),
+                                  self.id_generator) ]
 
         # dummy tank
-        objects += [ TankObject(
-                        tank_state = TankState(
-                            MovableState(
-                                position = Vector(
-                                    x = 200,
-                                    y = 200),
-                                angle = math.pi/2,
-                                speed = 0),
-                            health = 100,
-                            name = "Dummy",
-                            uid = self.id_generator.get()),
-                        id_generator = self.id_generator) ]
+#        objects += [ TankObject(
+#                        tank_state = TankState(
+#                            MovableState(
+#                                position = Vector(
+#                                    x = 200,
+#                                    y = 200),
+#                                angle = math.pi/2,
+#                                speed = 0),
+#                            health = 100,
+#                            name = "Dummy",
+#                            uid = self.id_generator.get()),
+#                        id_generator = self.id_generator) ]
 
         # Diagnostic variables
         __round_number = 0

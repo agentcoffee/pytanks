@@ -39,7 +39,7 @@ class Vector:
         return (self.x == other.x and self.y == other.y)
 
     def __str__(self):
-        return "(" + str(self.x) + ", " + str(self.y) + ")"
+        return "({self.x:.2f}, {self.y:.2f})"
 
     # Note: this is intentionally NOT __len__, because it can return floats and
     # len() does not like that.

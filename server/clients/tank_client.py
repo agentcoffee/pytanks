@@ -124,9 +124,9 @@ class TankClient:
                     self.tank.handler(packet)
 
                     if packet.event == InputPacket.Event.PRESS:
-                        logging.info("> " + str(packet.key.name))
+                        logging.info(f"> {packet.key.name} {self.tank.state.name}")
                     if packet.event == InputPacket.Event.RELEASE:
-                        logging.info("< " + str(packet.key.name))
+                        logging.info(f"< {packet.key.name} {self.tank.state.name}")
 
                 elif type(packet) is LeavePacket:
                     self.state = ClientState.DEAD

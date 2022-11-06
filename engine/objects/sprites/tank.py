@@ -60,11 +60,11 @@ class TankSprite(Drawable):
         self.track_animation_frames = 20
         self.track_animation_frames_count = self.track_animation_frames
 
-        logging.info("Instantiated TankSprite {}"
-                .format(self.state.name, self.state.position.x, self.state.position.y))
+        logging.info((f"Instantiated TankSprite {self.state.name}"
+                f"{self.state.position.x} x {self.state.position.y}"))
 
     def __str__(self):
-        return "TankSprite: " + str(self.state.uid)
+        return f"TankSprite: {self.state.uid}"
 
     def drawTank(self, fg_tank, fg_font):
         self.gc.change(foreground = fg_tank)
@@ -87,7 +87,7 @@ class TankSprite(Drawable):
                     RotationMatrix(self.state.angle) * (dot + Vector(0, 3))\
                     for dot in self.tracks_2]
 
-        if self.state.speed > 0:
+        if self.state.speed > 0.01:
             self.track_animation_frames_count -= 1
             if self.track_animation_frames_count == -self.track_animation_frames:
                 self.track_animation_frames_count = self.track_animation_frames
@@ -131,33 +131,33 @@ class TankObject(Movable):
         self.shoot = False
         self.hitbox_radius  = 7 # ~= sqrt(5*5 + 5*5)
 
-        logging.info("Instantiated TankObject {} : x = {} y = {}"
-                .format(self.state.name, self.state.position.x, self.state.position.y))
+        logging.info((f"Instantiated TankObject {self.state.name} :"
+                      f"x = {self.state.position.y} y = {self.state.position.y}"))
 
     def __str__(self):
         return f"Tank: {self.state.name} ({str(self.state.uid)})"
 
     def handler(self, e):
         if e.event == InputPacket.Event.PRESS:
-            if e.key == InputPacket.Key.UP:
+            if   e.key == InputPacket.Key.UP:
                 self.go(True)
             elif e.key == InputPacket.Key.DOWN:
                 self.stop(True)
             elif e.key == InputPacket.Key.LEFT:
-                self.rotate(True, -1)
+                self.rotate_left(True)
             elif e.key == InputPacket.Key.RIGHT:
-                self.rotate(True, 1)
+                self.rotate_right(True)
             elif e.key == InputPacket.Key.SPACE:
                 self.shoot = True
         elif e.event == InputPacket.Event.RELEASE:
-            if e.key == InputPacket.Key.UP:
+            if   e.key == InputPacket.Key.UP:
                 self.go(False)
             elif e.key == InputPacket.Key.DOWN:
                 self.stop(False)
             elif e.key == InputPacket.Key.LEFT:
-                self.rotate(False, -1)
+                self.rotate_left(False)
             elif e.key == InputPacket.Key.RIGHT:
-                self.rotate(False, 1)
+                self.rotate_right(False)
 
     def get_position(self):
         return self.state.position
@@ -181,6 +181,7 @@ class TankObject(Movable):
 
     def step(self, objects, movables):
         self.update(objects, movables)
+        logging.debug(f"{self.state.name} at {self.state.health} {Movable.__str__(self)}")
 
         if self.shoot == True:
             self.shoot = False
@@ -194,7 +195,7 @@ class TankObject(Movable):
                         position = start,
                         angle = self.state.angle,
                         #angle = a,
-                        speed = self.state.speed+0.7),
+                        speed = self.state.speed+0.4),
                     uid = self.id_generator.get()),
                 id_generator = self.id_generator))
             #    a += 0.01

@@ -44,24 +44,17 @@ class Movable(Collidable):
 
         self.accelerate     = False
         self.deaccelerate   = False
-        self.turn           = False
-        self.angular_sign   = 1
+        self.turn_left      = False
+        self.turn_right     = False
 
         self.timestamp      = 0
 
     def __str__(self):
-        return "pos: " + str(self.state.position) + \
-               " speed: " + str(self.state.speed)
+        return (f"Pos: {self.state.position} Speed: {self.state.speed:.2f}"
+                f" Acc: {self.accelerate} Dac: {self.deaccelerate}"
+                f" Turn left: {self.turn_left} Turn right: {self.turn_right}")
 
     def update(self, objects, movables):
-        field = None
-        for o in objects:
-            if isinstance(o, FieldObject):
-                field = o
-                break
-        if self.state.position in field.get_collisionbox():
-            raise RuntimeError(f"\n{self} is not in the field: {self.state.position}\n")
-
         t = ((time.monotonic_ns() / 1000000) - self.timestamp)
         self.timestamp = time.monotonic_ns() / 1000000
 
@@ -75,8 +68,10 @@ class Movable(Collidable):
             if self.state.speed < 0:
                 self.state.speed = 0
 
-        if self.turn == True:
-            self.state.angle += self.angular_speed * self.angular_sign * t
+        if self.turn_left == True:
+            self.state.angle -= self.angular_speed * t
+        elif self.turn_right == True:
+            self.state.angle += self.angular_speed * t
 
         direction = RotationMatrix(self.state.angle) * Vector(1, 0)
 
@@ -211,9 +206,11 @@ class Movable(Collidable):
                 #print(f"correcting position from {self.state.position} to {old_position + first_collision * direction}")
                 self.state.position = old_position + first_collision * direction
 
-    def rotate(self, v, d):
-        self.turn         = v
-        self.angular_sign = d
+    def rotate_left(self, v):
+        self.turn_left    = v
+
+    def rotate_right(self, v):
+        self.turn_right   = v
 
     def go(self, v):
         self.accelerate = v

@@ -35,6 +35,10 @@ class Commands:
 
         self.commands = []
 
+    def __str__(self):
+        return (f"Commands: Go {self.go_sem} Stop {self.stop_sem}"
+                f" Left {self.left_sem} Right {self.right_sem} Shoot {self.shoot_sem}")
+
     def get_commands(self):
         if self.go_sem == 1:
             self.__go_release()
@@ -190,6 +194,7 @@ class EasyRobot:
                         cmd_id_list  = packet.cmd_id_list
 
                         self.robot_compute(states_list, commands)
+                        logging.debug(str(commands))
 
                         for m in commands.get_commands():
                             self.connection.put(m)

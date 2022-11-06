@@ -13,6 +13,7 @@ from engine.objects.sprites.tank import TankSprite, TankState
 from engine.objects.sprites.projectile import ProjectileSprite, ProjectileState
 from engine.objects.sprites.explosion import ExplosionSprite, ExplosionState
 from engine.objects.sprites.field import FieldSprite, FieldState
+from engine.objects.sprites.leaderboard import LeaderboardSprite, LeaderboardState
 
 from server.clients.type_enum import ClientType
 
@@ -172,8 +173,11 @@ class Player:
 
                                     objects[state.uid] = FieldSprite(
                                         self.screen, self.window, self.gc, state)
+                                elif type(state) is LeaderboardState:
+                                    objects[state.uid] = LeaderboardSprite(
+                                        self.screen, self.window, self.gc, state)
                                 else:
-                                    raise NotImplementedError(type(state))
+                                    raise NotImplementedError(f"{type(state)}")
                             objects[state.uid].draw()
 
                         # TODO not very performant

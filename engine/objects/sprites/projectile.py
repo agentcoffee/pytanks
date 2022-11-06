@@ -37,8 +37,8 @@ class ProjectileSprite(Drawable):
 
         self.state = projectile_state
 
-        self.image = [Vector(2, 2),  Vector(2, -2), Vector(-2, -2),
-                      Vector(-2, 2), Vector(2, 2)]
+        self.image = [Vector(3, 2),  Vector(3, -2), Vector(-3, -2),
+                      Vector(-3, 2), Vector(3, 2)]
 
     def drawProjectile(self, fg_color):
         self.gc.change(foreground = fg_color)
@@ -65,7 +65,7 @@ class ProjectileObject(Movable):
                 acceleration = 0,
                 deacceleration = 0.0005,
                 angular_speed = 0.005,
-                drag_coefficient = 0.0001,
+                drag_coefficient = 0.0004,
                 movable_state = self.state)
 
         self.hitbox_radius = 3 # ~= sqrt(2*2 + 2*2)

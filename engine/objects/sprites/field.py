@@ -13,14 +13,16 @@ from engine.objects.sprites.explosion import ExplosionObject, ExplosionState
 
 from engine.bounding_box import BoundingBox
 
+FIELD_MARGIN = 10
 
 # Used to communicate the state to the clients
 class FieldState:
     def __init__(self, width, height, uid):
-        self.x_inf  = 1
-        self.x_sup  = width
-        self.y_inf  = 1
-        self.y_sup  = height
+        self.x_inf  = FIELD_MARGIN
+        self.x_sup  = width + FIELD_MARGIN
+        self.y_inf  = FIELD_MARGIN
+        self.y_sup  = height + FIELD_MARGIN
+
         self.width  = width
         self.height = height
         self.uid    = uid
@@ -53,7 +55,8 @@ class FieldSprite(Drawable):
 
     def draw_field(self, fg_border, fg_font):
         self.gc.change(foreground = fg_border)
-        self.window.rectangle(self.gc, 0, 0, int(self.state.width), int(self.state.height))
+        self.window.rectangle(self.gc, int(self.state.x_inf), int(self.state.y_inf),
+                              int(self.state.width), int(self.state.height))
 
     def draw(self):
         self.draw_field(self.screen.black_pixel, self.red)
@@ -75,9 +78,6 @@ class FieldObject(Collidable):
     def __str__(self):
         return "Field: " + str(self.state.uid)
 
-    def handler(self, e):
-        pass
-
     def get_position(self):
         raise NotImplementedError(f"Called get_position on Field {self.id}")
 
@@ -85,7 +85,8 @@ class FieldObject(Collidable):
         raise NotImplementedError(f"Called get_hitboxradius on Field {self.id}")
 
     def get_collisionbox(self):
-        return BoundingBox(Interval(1, self.state.width, True), Interval(1, self.state.height, True))
+        return BoundingBox(Interval(self.state.x_inf, self.state.x_sup, True),
+                           Interval(self.state.y_inf, self.state.y_sup, True))
 
     def collision(self, other):
         pass
