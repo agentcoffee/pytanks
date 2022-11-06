@@ -1,14 +1,14 @@
 import time
 import math
 
-from maths.vector import Vector
-from maths.matrix import Matrix
-from maths.matrix import RotationMatrix
-from maths.interval import Interval
+from engine.maths.vector import Vector
+from engine.maths.matrix import Matrix
+from engine.maths.matrix import RotationMatrix
+from engine.maths.interval import Interval
 
-from sprites.drawable import Drawable
-from sprites.collidable import Collidable, CollidableType
-from sprites.field import FieldObject
+from engine.objects.generics.drawable import Drawable
+from engine.objects.generics.collidable import Collidable, CollidableType
+from engine.objects.sprites.field import FieldObject
 
 from engine.bounding_box import BoundingBox
 

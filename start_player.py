@@ -16,13 +16,12 @@ import sys
 
 from Xlib import X, display, threaded
 
-from packets import * 
+from server.packets import * 
 
 from players.xorg.player import Player
-from drivers.tcp_driver  import TCPConnection
+from server.tcp_driver  import TCPConnection
 
-# Exceptions
-from queue import Empty
+import logging
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -33,7 +32,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("IP: " + str(args.ip) + " : " + str(args.port) + " / " + args.name)
+    logging.info("IP: " + str(args.ip) + " : " + str(args.port) + " / " + args.name)
 
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
@@ -49,6 +48,8 @@ if __name__ == "__main__":
 
         #with PyCallGraph(output=graphviz):
         #    Window(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
+
+        logging.basicConfig(level=logging.INFO, format="[%(levelname)-8s] %(message)s")
 
         Player(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
 

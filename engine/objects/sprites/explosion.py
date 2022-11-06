@@ -1,9 +1,9 @@
 import time
 from Xlib import X, threaded
 
-from maths.vector import Vector
-from sprites.drawable import Drawable
-from sprites.collidable import Collidable
+from engine.maths.vector import Vector
+from engine.objects.generics.drawable import Drawable
+from engine.objects.generics.collidable import Collidable
 
 EXPANSION_TIME = 100 # in ms
 

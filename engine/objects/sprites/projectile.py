@@ -2,18 +2,18 @@ import math
 import random
 from Xlib import X, threaded
 
-import debug
-import sprites.tank
+import logging
+import engine.objects.sprites.tank
 
-from maths.vector import Vector
-from maths.matrix import RotationMatrix
-from maths.interval import Interval
+from engine.maths.vector import Vector
+from engine.maths.matrix import RotationMatrix
+from engine.maths.interval import Interval
 
-from sprites.movable import Movable, MovableState
-from sprites.drawable import Drawable
-from sprites.collidable import Collidable
-from sprites.explosion import ExplosionObject, ExplosionState
-from sprites.field import FieldObject
+from engine.objects.generics.movable import Movable, MovableState
+from engine.objects.generics.drawable import Drawable
+from engine.objects.generics.collidable import Collidable
+from engine.objects.sprites.explosion import ExplosionObject, ExplosionState
+from engine.objects.sprites.field import FieldObject
 
 from engine.bounding_box import BoundingBox
 
@@ -73,7 +73,7 @@ class ProjectileObject(Movable):
         self.explode = False
         self.id_generator = id_generator
 
-        debug.objects("Instantiated Projectile x = {} y = {}"
+        logging.info("Instantiated Projectile x = {} y = {}"
                 .format(self.state.position.x, self.state.position.y))
 
     def __str__(self):
@@ -89,7 +89,8 @@ class ProjectileObject(Movable):
         return BoundingBox(self.state.position, self.hitbox_radius)
 
     def collision(self, other):
-        if isinstance(other, sprites.tank.TankObject):
+        # Note: Importing TankObject at the top results in a circ import
+        if isinstance(other, engine.objects.sprites.tank.TankObject):
             self.explode = True
             return False
 

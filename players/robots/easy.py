@@ -3,19 +3,19 @@ import math
 import random
 from enum import Enum
 
-from maths.vector import Vector
-from maths.matrix import Matrix
-from maths.matrix import RotationMatrix
-from sprites.movable import Movable
-from sprites.tank import TankState
-from sprites.projectile import ProjectileSprite, ProjectileState
-from sprites.explosion import ExplosionSprite, ExplosionState
-from clients.type_enum import ClientType
+from engine.maths.vector import Vector
+from engine.maths.matrix import Matrix
+from engine.maths.matrix import RotationMatrix
+from engine.objects.generics.movable import Movable
+from engine.objects.sprites.tank import TankState
+from engine.objects.sprites.projectile import ProjectileSprite, ProjectileState
+from engine.objects.sprites.explosion import ExplosionSprite, ExplosionState
+from server.clients.type_enum import ClientType
 
-import debug
+import logging
 from config.event_loop_time import EVENT_LOOP_TIME
 
-from packets import *
+from server.packets import *
 
 class PlayerState(Enum):
     JOINING   = 1
@@ -129,7 +129,7 @@ class EasyRobot:
         self.target     = "esteban"
         self.shoot_timeout = 0
  
-        print("Sent Initial JoinReq, Listening ...")
+        logging.info("Sent Initial JoinReq, Listening ...")
         self.connection.put( JoinReqPacket(ClientType.TANK) )
 
         packet = self.connection.blocking_get()
@@ -141,7 +141,7 @@ class EasyRobot:
         try:
             self._loop()
         finally:
-            print("Cleaning up")
+            logging.info("Cleaning up")
             self.connection.close()
  
     def _loop(self):
@@ -162,7 +162,7 @@ class EasyRobot:
             __run_total = __t - __run_start
 
             if self.state is PlayerState.JOINING:
-                print("Sent JoinReq, Listening ...")
+                logging.info("Sent JoinReq, Listening ...")
                 self.connection.put( CreateTankPacket(self.tank_name) )
 
                 if self.connection.poll():
@@ -198,11 +198,11 @@ class EasyRobot:
                         self.state = PlayerState.TANK_DIED
 
             elif self.state is PlayerState.TANK_DIED:
-                print("You died.")
+                logging.info("You died.")
                 self.state = PlayerState.EXIT
 
             elif self.state is PlayerState.EXIT:
-                print("Disconnecting from the server")
+                logging.info("Disconnecting from the server")
                 self.connection.put( LeavePacket(self.tank_uid) )
                 return
 
@@ -211,7 +211,7 @@ class EasyRobot:
             __idle_start = (time.monotonic_ns() / 1000000)
 
             if __idle_start > deadline:
-                print("Missed round " + str(__round_number) + " by: " +
+                logging.info("Missed round " + str(__round_number) + " by: " +
                         str(__idle_start - deadline))
 
             # Coarse grained waiting
@@ -273,9 +273,9 @@ class EasyRobot:
                 commands.go()
 
         except UnboundLocalError as e:
-            print(e)
+            logging.info(e)
             pass
 
         except ZeroDivisionError as e:
-            print(e)
+            logging.info(e)
             pass

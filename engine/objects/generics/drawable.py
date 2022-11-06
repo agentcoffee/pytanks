@@ -1,5 +1,5 @@
-from maths.vector import Vector
-from maths.interval import Interval
+from engine.maths.vector import Vector
+from engine.maths.interval import Interval
 
 
 class Drawable:

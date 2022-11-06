@@ -3,19 +3,19 @@ import random
 import time
 
 import math
-import debug
+import logging
 from enum import Enum
 
-from packets import *
-from maths.vector import Vector
-from sprites.tank import TankObject, TankState
-from sprites.field import FieldObject
-from sprites.movable import MovableState
-from clients.state_enum import ClientState
+from server.packets import *
+from engine.maths.vector import Vector
+from engine.objects.sprites.tank import TankObject, TankState
+from engine.objects.sprites.field import FieldObject
+from engine.objects.generics.movable import MovableState
+from server.clients.state_enum import ClientState
 
 class TankClient:
     def __init__(self, connection):
-        print("New TankClient instantiated")
+        logging.info("New TankClient instantiated")
 
         self.connection = connection
         self.state      = ClientState.WAITING
@@ -89,11 +89,11 @@ class TankClient:
 
                 self.put(TankAckPacket(self.tank.state.uid))
                 self.state = ClientState.READY
-                print("Client {} moves to READY".format(self.name))
+                logging.info("Client {} moves to READY".format(self.name))
 
             elif type(packet) is LeavePacket:
                 self.state = ClientState.DEAD
-                print("Client {} left".format(self.name))
+                logging.info("Client {} left".format(self.name))
 
     def state_ready(self, cmd_id_list=None):
         """
@@ -118,19 +118,19 @@ class TankClient:
                 if type(packet) is InputPacket:
                     if cmd_id_list is not None:
                         cmd_id_list.append(packet.cmd_id)
-                        debug.latency("Gameloop handled Input: {} at {}".format(
+                        logging.debug("Gameloop handled Input: {} at {}".format(
                             packet.cmd_id, (time.monotonic_ns() / 1000000)))
 
                     self.tank.handler(packet)
 
                     if packet.event == InputPacket.Event.PRESS:
-                        debug.input("> " + str(packet.key.name))
+                        logging.info("> " + str(packet.key.name))
                     if packet.event == InputPacket.Event.RELEASE:
-                        debug.input("< " + str(packet.key.name))
+                        logging.info("< " + str(packet.key.name))
 
                 elif type(packet) is LeavePacket:
                     self.state = ClientState.DEAD
-                    print("Client {} left".format(self.name))
+                    logging.info("Client {} left".format(self.name))
 
     def state_dead(self):
         pass
@@ -139,14 +139,14 @@ class TankClient:
         try:
             return pickle.loads(self.connection.get())
         except (BrokenPipeError, ConnectionResetError):
-            print("Client '{}' died unexpectedly.".format(self.name))
+            logging.info("Client '{}' died unexpectedly.".format(self.name))
             self.state = ClientState.DEAD
 
     def poll(self):
         try:
             return self.connection.poll()
         except (BrokenPipeError, ConnectionResetError):
-            print("Client '{}' died unexpectedly.".format(self.name))
+            logging.info("Client '{}' died unexpectedly.".format(self.name))
             self.state = ClientState.DEAD
             return False
 
@@ -154,7 +154,7 @@ class TankClient:
         try:
             return self.connection.put(pickle.dumps(msg))
         except (BrokenPipeError, ConnectionResetError):
-            print("Client '{}' died unexpectedly.".format(self.name))
+            logging.info("Client '{}' died unexpectedly.".format(self.name))
             self.state = ClientState.DEAD
 
     def close(self):

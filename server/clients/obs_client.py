@@ -3,15 +3,15 @@ import random
 import time
 
 import math
-import debug
+import logging
 
-from packets import *
+from server.packets import *
 from enum import Enum
-from clients.state_enum import ClientState
+from server.clients.state_enum import ClientState
 
 class ObserverClient:
     def __init__(self, connection):
-        print("New ObserverClient instantiated")
+        logging.info("New ObserverClient instantiated")
 
         self.connection = connection
         self.state      = ClientState.READY
@@ -31,14 +31,14 @@ class ObserverClient:
         try:
             return pickle.loads(self.connection.get())
         except (BrokenPipeError, ConnectionResetError):
-            print("Observer client '{}' died unexpectedly.".format(self.name))
+            logging.info("Observer client '{}' died unexpectedly.".format(self.name))
             self.state = ClientState.DEAD
 
     def poll(self):
         try:
             return self.connection.poll()
         except (BrokenPipeError, ConnectionResetError):
-            print("Observer client '{}' died unexpectedly.".format(self.name))
+            logging.info("Observer client '{}' died unexpectedly.".format(self.name))
             self.state = ClientState.DEAD
             return False
 
@@ -46,7 +46,7 @@ class ObserverClient:
         try:
             return self.connection.put(pickle.dumps(msg))
         except (BrokenPipeError, ConnectionResetError):
-            print("Observer client '{}' died unexpectedly.".format(self.name))
+            logging.info("Observer client '{}' died unexpectedly.".format(self.name))
             self.state = ClientState.DEAD
 
     def close(self):

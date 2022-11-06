@@ -3,19 +3,19 @@ import math
 import random
 import pickle
 
-from packets import * 
+from server.packets import * 
 
-from clients.state_enum import ClientState
-from sprites.collidable import Collidable
+from server.clients.state_enum import ClientState
+from engine.objects.generics.collidable import Collidable
 
-from maths.vector import Vector
-from sprites.tank import TankObject, TankState
-from sprites.field import FieldObject, FieldState
-from sprites.movable import MovableState
+from engine.maths.vector import Vector
+from engine.objects.sprites.tank import TankObject, TankState
+from engine.objects.sprites.field import FieldObject, FieldState
+from engine.objects.generics.movable import MovableState
 
-from unique_id import UniqueID
+from engine.unique_id import UniqueID
 
-import debug
+import logging
 from config.event_loop_time import EVENT_LOOP_TIME
 
 
@@ -91,9 +91,9 @@ class GameLoop:
         try:
             self.gameloop()
         except KeyboardInterrupt:
-            print("CTRL-C received")
+            logging.info("CTRL-C received")
         finally:
-            print("Cleanup")
+            logging.info("Cleanup")
             self.io_server.close()
  
     def gameloop(self):
@@ -143,7 +143,7 @@ class GameLoop:
 
                 # Diagnostics
                 if len(cmd_id_list) != 0:
-                    debug.latency("Gameloop replied to Inputs: {} at {}".format(
+                    logging.debug("Gameloop replied to Inputs: {} at {}".format(
                         cmd_id_list, (time.monotonic_ns() / 1000000)))
 
                 cmd_id_list = []
@@ -182,14 +182,14 @@ class GameLoop:
 
                 # Ez debugging
                 if (__round_number % 100) == 0:
-                    print("[ idle %: " +
+                    logging.info("[ idle %: " +
                             str(100 * __idle_total / __run_total) + " round: " +
                             str(__round_number) + " ]")
 
                 __idle_start = (time.monotonic_ns() / 1000000)
 
                 if __idle_start > deadline:
-                    print("Missed round " + str(__round_number) + " by: " +
+                    logging.info("Missed round " + str(__round_number) + " by: " +
                             str(__idle_start - deadline))
 
                 # Coarse grained waiting

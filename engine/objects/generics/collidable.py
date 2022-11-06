@@ -1,4 +1,4 @@
-from maths.interval import Interval
+from engine.maths.interval import Interval
 from enum import Enum
 
 
@@ -30,4 +30,4 @@ class Collidable:
 
     # Callback on an actual collision
     def collision(self, other, k=None):
-        print(f"Movable: {str(self)} collides with {str(other)} after k {k}")
+        logging.info(f"Movable: {str(self)} collides with {str(other)} after k {k}")

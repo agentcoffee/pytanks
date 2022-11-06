@@ -4,22 +4,22 @@ import random
 from Xlib import X, display, threaded
 from enum import Enum
 
-from maths.vector import Vector
-from maths.matrix import Matrix
-from maths.matrix import RotationMatrix
+from engine.maths.vector import Vector
+from engine.maths.matrix import Matrix
+from engine.maths.matrix import RotationMatrix
 
-from sprites.movable import Movable
-from sprites.tank import TankSprite, TankState
-from sprites.projectile import ProjectileSprite, ProjectileState
-from sprites.explosion import ExplosionSprite, ExplosionState
-from sprites.field import FieldSprite, FieldState
+from engine.objects.generics.movable import Movable
+from engine.objects.sprites.tank import TankSprite, TankState
+from engine.objects.sprites.projectile import ProjectileSprite, ProjectileState
+from engine.objects.sprites.explosion import ExplosionSprite, ExplosionState
+from engine.objects.sprites.field import FieldSprite, FieldState
 
-from clients.type_enum import ClientType
+from server.clients.type_enum import ClientType
 
-import debug
+import logging
 from config.event_loop_time import EVENT_LOOP_TIME
 
-from packets import *
+from server.packets import *
 
 class PlayerState(Enum):
     JOINING   = 1
@@ -39,7 +39,7 @@ class Player:
 
         self.field          = (100, 100)
  
-        print("Sent Initial JoinReq, Listening ...")
+        logging.info("Sent Initial JoinReq, Listening ...")
         self.connection.put( JoinReqPacket(ClientType.TANK) )
 
         packet = self.connection.blocking_get()
@@ -84,7 +84,7 @@ class Player:
         try:
             self._loop()
         finally:
-            print("Cleaning up")
+            logging.info("Cleaning up")
             self.connection.close()
  
     def _loop(self):
@@ -103,7 +103,7 @@ class Player:
         e = self.display.next_event()
 
         if e.type != X.Expose:
-            print("Need an expose event first.")
+            logging.info("Need an expose event first.")
 
         # TODO implement sync interval, dont hog CPU
         while True:
@@ -114,7 +114,7 @@ class Player:
             self.display.sync()
 
             if self.state is PlayerState.JOINING:
-                print("Sent JoinReq, Listening ...")
+                logging.info("Sent JoinReq, Listening ...")
                 self.connection.put( CreateTankPacket(self.tank_name) )
 
                 if self.connection.poll():
@@ -143,11 +143,11 @@ class Player:
                         for c in cmd_id_list:
                             if c in latency_map.keys():
                                 __t = (time.monotonic_ns() / 1000000)
-                                debug.latency("Client received response to Input: {} at {}" .format(c, __t))
+                                logging.debug("Client received response to Input: {} at {}" .format(c, __t))
                                 try:
-                                    print("Latency: " + str(__t - latency_map[c]))
+                                    logging.info("Latency: " + str(__t - latency_map[c]))
                                 except KeyError:
-                                    print("OOOPS: Latency > 100ms, deleted key before response came!")
+                                    logging.info("OOOPS: Latency > 100ms, deleted key before response came!")
                                 del latency_map[c]
 
                         for state in states_list:
@@ -192,11 +192,11 @@ class Player:
                         self.state = PlayerState.TANK_DIED
 
             elif self.state is PlayerState.TANK_DIED:
-                print("You died.")
+                logging.info("You died.")
                 self.state = PlayerState.EXIT
 
             elif self.state is PlayerState.EXIT:
-                print("Disconnecting from the server")
+                logging.info("Disconnecting from the server")
                 self.connection.put( LeavePacket(self.tank_uid) )
                 return
 
@@ -244,10 +244,10 @@ class Player:
                             packet = InputPacket(self.tank_uid, key, event, cmd_id, t)
                             self.connection.put( packet )
                             if packet.event == InputPacket.Event.PRESS:
-                                debug.input("> " + str(packet.key.name))
+                                logging.info("> " + str(packet.key.name))
                             if packet.event == InputPacket.Event.RELEASE:
-                                debug.input("< " + str(packet.key.name))
-                            debug.latency("Client sent Input: {} at {}".format(cmd_id, t))
+                                logging.info("< " + str(packet.key.name))
+                            logging.debug("Client sent Input: {} at {}".format(cmd_id, t))
                         except KeyError:
                             pass
 
@@ -256,7 +256,7 @@ class Player:
             __idle_start = (time.monotonic_ns() / 1000000)
 
             if __idle_start > deadline:
-                print("Missed round " + str(__round_number) + " by: " +
+                logging.info("Missed round " + str(__round_number) + " by: " +
                         str(__idle_start - deadline))
 
             # Ez debugging

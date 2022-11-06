@@ -1,5 +1,5 @@
-from maths.interval import Interval
-from maths.vector import Vector
+from engine.maths.interval import Interval
+from engine.maths.vector import Vector
 
 # If only a is given, then b = c = d = a is set.
 # 

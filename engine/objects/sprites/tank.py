@@ -2,20 +2,20 @@ import math
 import random
 from Xlib import X, threaded
 
-import debug
-from maths.vector import Vector
-from maths.matrix import RotationMatrix
-from maths.interval import Interval
+import logging
+from engine.maths.vector import Vector
+from engine.maths.matrix import RotationMatrix
+from engine.maths.interval import Interval
 
-from sprites.movable import Movable, MovableState
-from sprites.drawable import Drawable
-from sprites.projectile import ProjectileObject, ProjectileState
-from sprites.explosion import ExplosionObject, ExplosionState
-from sprites.field import FieldObject
+from engine.objects.generics.movable import Movable, MovableState
+from engine.objects.generics.drawable import Drawable
+from engine.objects.sprites.projectile import ProjectileObject, ProjectileState
+from engine.objects.sprites.explosion import ExplosionObject, ExplosionState
+from engine.objects.sprites.field import FieldObject
 
 from engine.bounding_box import BoundingBox
 
-from packets import InputPacket
+from server.packets import InputPacket
 
 # Used to communicate the state to the clients
 class TankState(MovableState):
@@ -60,7 +60,7 @@ class TankSprite(Drawable):
         self.track_animation_frames = 20
         self.track_animation_frames_count = self.track_animation_frames
 
-        debug.objects("Instantiated TankSprite {}"
+        logging.info("Instantiated TankSprite {}"
                 .format(self.state.name, self.state.position.x, self.state.position.y))
 
     def __str__(self):
@@ -131,7 +131,7 @@ class TankObject(Movable):
         self.shoot = False
         self.hitbox_radius  = 7 # ~= sqrt(5*5 + 5*5)
 
-        print("Instantiated TankObject {} : x = {} y = {}"
+        logging.info("Instantiated TankObject {} : x = {} y = {}"
                 .format(self.state.name, self.state.position.x, self.state.position.y))
 
     def __str__(self):

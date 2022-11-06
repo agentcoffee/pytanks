@@ -13,13 +13,12 @@ import pickle
 import argparse
 import sys
 
-from packets import * 
+from server.packets import * 
 
 from players.robots.easy import EasyRobot
-from drivers.tcp_driver import TCPConnection
+from server.tcp_driver import TCPConnection
 
-# Exceptions
-from queue import Empty
+import logging
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -30,13 +29,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("IP: " + str(args.ip) + " : " + str(args.port) + " / " + args.name)
+    logging.info("IP: " + str(args.ip) + " : " + str(args.port) + " / " + args.name)
 
     #graphviz = GraphvizOutput()
     #graphviz.output_file = 'cg_window.png'
 
     #with PyCallGraph(output=graphviz):
     #    Window(display.Display(), TCPConnection(args.ip, args.port), args.name).loop()
+
+    logging.basicConfig(level=logging.INFO, format="[%(levelname)-8s] %(message)s")
 
     EasyRobot(TCPConnection(args.ip, args.port), args.name).loop()
 

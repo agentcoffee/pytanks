@@ -1,6 +1,6 @@
 import math
 
-from maths.vector import Vector
+from engine.maths.vector import Vector
 
 # [ a b ]
 # [ c d ]

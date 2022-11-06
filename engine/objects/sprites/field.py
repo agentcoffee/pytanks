@@ -2,14 +2,14 @@ import math
 import random
 from Xlib import X, threaded
 
-import debug
-from maths.vector import Vector
-from maths.matrix import RotationMatrix
-from maths.interval import Interval
+import logging
+from engine.maths.vector import Vector
+from engine.maths.matrix import RotationMatrix
+from engine.maths.interval import Interval
 
-from sprites.drawable import Drawable
-from sprites.collidable import Collidable, CollidableType
-from sprites.explosion import ExplosionObject, ExplosionState
+from engine.objects.generics.drawable import Drawable
+from engine.objects.generics.collidable import Collidable, CollidableType
+from engine.objects.sprites.explosion import ExplosionObject, ExplosionState
 
 from engine.bounding_box import BoundingBox
 
@@ -46,7 +46,7 @@ class FieldSprite(Drawable):
         # Init the state
         self.state = field_state
 
-        debug.objects(f"Instantiated Field {self.state.width} x {self.state.height}")
+        logging.info(f"Instantiated Field {self.state.width} x {self.state.height}")
 
     def __str__(self):
         return "FieldSprite: " + str(self.state.uid)
@@ -69,7 +69,8 @@ class FieldObject(Collidable):
 
         Collidable.__init__(self, CollidableType.SQUARE)
 
-        print(f"Instantiated Field {self.state.uid} : x = {self.state.width} y = {self.state.height}")
+        logging.info((f"Instantiated Field {self.state.uid} : "
+            f"x = {self.state.width} y = {self.state.height}"))
 
     def __str__(self):
         return "Field: " + str(self.state.uid)

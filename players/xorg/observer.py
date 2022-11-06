@@ -4,19 +4,19 @@ import random
 from Xlib import X, display, threaded
 from enum import Enum
 
-from maths.vector import Vector
-from maths.matrix import Matrix
-from maths.matrix import RotationMatrix
-from sprites.movable import Movable
-from sprites.tank import TankSprite, TankState
-from sprites.projectile import ProjectileSprite, ProjectileState
-from sprites.explosion import ExplosionSprite, ExplosionState
-from clients.type_enum import ClientType
+from engine.maths.vector import Vector
+from engine.maths.matrix import Matrix
+from engine.maths.matrix import RotationMatrix
+from engine.objects.generics.movable import Movable
+from engine.objects.sprites.tank import TankSprite, TankState
+from engine.objects.sprites.projectile import ProjectileSprite, ProjectileState
+from engine.objects.sprites.explosion import ExplosionSprite, ExplosionState
+from server.clients.type_enum import ClientType
 
-import debug
+import logging
 from config.event_loop_time import EVENT_LOOP_TIME
 
-from packets import *
+from server.packets import *
 
 class ObserverState(Enum):
     JOINING   = 1
@@ -31,7 +31,7 @@ class Observer:
         # X11 init
         self.display    = display
  
-        print("Sent Initial JoinReq, Listening ...")
+        logging.info("Sent Initial JoinReq, Listening ...")
         self.connection.put( JoinReqPacket(ClientType.OBSERVER) )
 
         packet = self.connection.blocking_get()
@@ -76,7 +76,7 @@ class Observer:
         try:
             self._loop()
         finally:
-            print("Cleaning up")
+            logging.info("Cleaning up")
             self.connection.close()
  
     def _loop(self):
@@ -92,7 +92,7 @@ class Observer:
         e = self.display.next_event()
 
         if e.type != X.Expose:
-            print("Need an expose event first.")
+            logging.info("Need an expose event first.")
 
         # TODO implement sync interval, dont hog CPU
         while True:
@@ -149,7 +149,7 @@ class Observer:
                             del objects[uid]
 
             elif self.state is ObserverState.EXIT:
-                print("Disconnecting from the server")
+                logging.info("Disconnecting from the server")
                 self.connection.put( LeavePacket(0) )
                 return
 
@@ -172,7 +172,7 @@ class Observer:
             __idle_start = (time.monotonic_ns() / 1000000)
 
             if __idle_start > deadline:
-                print("Missed round " + str(__round_number) + " by: " +
+                logging.info("Missed round " + str(__round_number) + " by: " +
                         str(__idle_start - deadline))
 
             # Coarse grained waiting

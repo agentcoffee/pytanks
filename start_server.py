@@ -4,8 +4,10 @@ from pycallgraph3.output import GraphvizOutput
 
 import argparse
 
-from gameloop import GameLoop
-from drivers.tcp_driver import TCPServer
+from engine.gameloop import GameLoop
+from server.tcp_driver import TCPServer
+
+import logging
 
 def start_server():
     parser = argparse.ArgumentParser()
@@ -15,10 +17,12 @@ def start_server():
 
     args = parser.parse_args()
 
-    print("IP: " + str(args.ip) + " : " + str(args.port))
+    logging.info("IP: " + str(args.ip) + " : " + str(args.port))
 
     graphviz = GraphvizOutput()
     graphviz.output_file = 'cg_window_server.png'
+
+    logging.basicConfig(level=logging.INFO, format="[%(levelname)-8s] %(message)s")
 
     with PyCallGraph(output=graphviz):
         GameLoop(TCPServer(args.ip, args.port)).loop()

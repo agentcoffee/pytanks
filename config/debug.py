@@ -4,12 +4,12 @@ DEBUG_OBJECTS = False
 
 def latency(msg):
     if DEBUG_LATENCY:
-        print(msg)
+        logging.info(msg)
 
 def input(msg):
     if DEBUG_INPUT:
-        print(msg)
+        logging.info(msg)
 
 def objects(msg):
     if DEBUG_OBJECTS:
-        print(msg)
+        logging.info(msg)
