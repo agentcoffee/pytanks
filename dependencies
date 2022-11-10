@@ -1,0 +1,8 @@
+python:
+pycallgraph2
+python-xlib
+pydot
+
+packages:
+graphviz
+tk
