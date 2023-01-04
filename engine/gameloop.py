@@ -103,7 +103,7 @@ class GameLoop:
             Thats any tank, any projectile and also texts, for example.
         """
         clients  = []
-        objects  = [ FieldObject(FieldState(400, 400, self.id_generator.get()), self.id_generator) ]
+        objects  = [ FieldObject(FieldState(600, 600, self.id_generator.get()), self.id_generator) ]
         objects += [ LeaderboardObject(LeaderboardState(self.id_generator.get()),
                                   self.id_generator) ]
 
